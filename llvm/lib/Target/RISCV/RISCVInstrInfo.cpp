@@ -1580,6 +1580,70 @@ unsigned RISCVInstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
   }
 }
 
+unsigned RISCVInstrInfo::getInstSizeInBytesPostPreRAPseduoExpand(const MachineInstr &MI) const {
+  if (MI.isMetaInstruction())
+    return 0;
+
+  unsigned Opcode = MI.getOpcode();
+
+  if (Opcode == TargetOpcode::INLINEASM ||
+      Opcode == TargetOpcode::INLINEASM_BR) {
+    const MachineFunction &MF = *MI.getParent()->getParent();
+    return getInlineAsmLength(MI.getOperand(0).getSymbolName(),
+                              *MF.getTarget().getMCAsmInfo());
+  }
+
+  if (!MI.memoperands_empty()) {
+    MachineMemOperand *MMO = *(MI.memoperands_begin());
+    if (STI.hasStdExtZihintntl() && MMO->isNonTemporal()) {
+      if (STI.hasStdExtCOrZca() && STI.enableRVCHintInstrs()) {
+        if (isCompressibleInst(MI, STI))
+          return 4; // c.ntl.all + c.load/c.store
+        return 6;   // c.ntl.all + load/store
+      }
+      return 8; // ntl.all + load/store
+    }
+  }
+
+  if (Opcode == TargetOpcode::BUNDLE)
+    return getInstBundleLength(MI);
+
+  if (MI.getParent() && MI.getParent()->getParent()) {
+    if (isCompressibleInst(MI, STI))
+      return 2;
+  }
+
+  switch (Opcode) {
+  case RISCV::PseudoMV_FPR16INX:
+  case RISCV::PseudoMV_FPR32INX:
+    // MV is always compressible to either c.mv or c.li rd, 0.
+    return STI.hasStdExtCOrZca() ? 2 : 4;
+  case TargetOpcode::STACKMAP:
+    // The upper bound for a stackmap intrinsic is the full length of its shadow
+    return StackMapOpers(&MI).getNumPatchBytes();
+  case TargetOpcode::PATCHPOINT:
+    // The size of the patchpoint intrinsic is the number of bytes requested
+    return PatchPointOpers(&MI).getNumPatchBytes();
+  case TargetOpcode::STATEPOINT: {
+    // The size of the statepoint intrinsic is the number of bytes requested
+    unsigned NumBytes = StatepointOpers(&MI).getNumPatchBytes();
+    // No patch bytes means at most a PseudoCall is emitted
+    return std::max(NumBytes, 8U);
+  }
+  case RISCV::PseudoVFSIN_V_M1_E32:
+  case RISCV::PseudoVFSIN_V_M2_E32:
+  case RISCV::PseudoVFSIN_V_M4_E32:
+  case RISCV::PseudoVFSIN_V_M8_E32:
+  case RISCV::PseudoVFSIN_V_M1_E16:
+  case RISCV::PseudoVFSIN_V_M2_E16:
+  case RISCV::PseudoVFSIN_V_M4_E16:
+  case RISCV::PseudoVFSIN_V_M8_E16:
+    return 4;
+  default:
+    return get(Opcode).getSize();
+  }
+}
+
 unsigned RISCVInstrInfo::getInstBundleLength(const MachineInstr &MI) const {
   unsigned Size = 0;
   MachineBasicBlock::const_instr_iterator I = MI.getIterator();

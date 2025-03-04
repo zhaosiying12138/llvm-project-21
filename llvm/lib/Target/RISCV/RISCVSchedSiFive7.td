@@ -1304,4 +1304,5 @@ defm : UnsupportedSchedZbkb;
 defm : UnsupportedSchedZbkx;
 defm : UnsupportedSchedZfa;
 defm : UnsupportedSchedZvk;
+defm : UnsupportedSchedYushuxinSinV;
 }

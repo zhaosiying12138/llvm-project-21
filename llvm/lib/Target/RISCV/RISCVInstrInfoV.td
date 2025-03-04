@@ -1423,6 +1423,14 @@ defm VFREC7_V : VRCP_FV_VS2<"vfrec7.v", 0b010011, 0b00101>;
 let mayRaiseFPException = true in
 defm VFRSQRT7_V : VRCP_FV_VS2<"vfrsqrt7.v", 0b010011, 0b00100>;
 
+multiclass VSIN_FV_VS2<string opcodestr, bits<6> funct6, bits<5> vs1> {
+  def "" : VALUVs2<funct6, vs1, OPFVV, opcodestr>,
+           SchedUnaryMC<"WriteVFSinV", "ReadVFSinV">;
+}
+
+let mayRaiseFPException = true in
+defm VFSIN_V : VSIN_FV_VS2<"vfsin.v", 0b010011, 0b10100>;
+
 // Vector Floating-Point MIN/MAX Instructions
 let mayRaiseFPException = true in {
 defm VFMIN_V : VMINMAX_FV_V_F<"vfmin", 0b000100>;

@@ -452,6 +452,7 @@ defm "" : LMULSEWSchedWritesF<"WriteVFSqrtV">;
 // 13.9. Vector Floating-Point Reciprocal Square-Root Estimate Instruction
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction
 defm "" : LMULSEWSchedWritesF<"WriteVFRecpV">;
+defm "" : LMULSEWSchedWritesF<"WriteVFSinV">;
 // 13.11. Vector Floating-Point MIN/MAX Instructions
 defm "" : LMULSEWSchedWritesF<"WriteVFMinMaxV">;
 defm "" : LMULSEWSchedWritesF<"WriteVFMinMaxF">;
@@ -679,6 +680,7 @@ defm "" : LMULSEWSchedReadsF<"ReadVFSqrtV">;
 // 13.9. Vector Floating-Point Reciprocal Square-Root Estimate Instruction
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction
 defm "" : LMULSEWSchedReadsF<"ReadVFRecpV">;
+defm "" : LMULSEWSchedReadsF<"ReadVFSinV">;
 // 13.11. Vector Floating-Point MIN/MAX Instructions
 defm "" : LMULSEWSchedReadsF<"ReadVFMinMaxV">;
 defm "" : LMULSEWSchedReadsF<"ReadVFMinMaxF">;
@@ -922,6 +924,7 @@ defm "" : LMULSEWWriteResFW<"WriteVFWMulAddV", []>;
 defm "" : LMULSEWWriteResFW<"WriteVFWMulAddF", []>;
 defm "" : LMULSEWWriteResF<"WriteVFSqrtV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFRecpV", []>;
+defm "" : LMULSEWWriteResF<"WriteVFSinV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFMinMaxV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFMinMaxF", []>;
 defm "" : LMULSEWWriteResF<"WriteVFSgnjV", []>;
@@ -1080,6 +1083,7 @@ defm "" : LMULSEWReadAdvanceFW<"ReadVFWMulAddV", 0>;
 defm "" : LMULSEWReadAdvanceFW<"ReadVFWMulAddF", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFSqrtV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFRecpV", 0>;
+defm "" : LMULSEWReadAdvanceF<"ReadVFSinV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFMinMaxV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFMinMaxF", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFSgnjV", 0>;
@@ -1158,3 +1162,10 @@ foreach mx = SchedMxList in {
 
 } // Unsupported
 } // UnsupportedSchedV
+
+multiclass UnsupportedSchedYushuxinSinV {
+let Unsupported = true in {
+  defm "" : LMULSEWWriteResF<"WriteVFSinV", []>;
+  defm "" : LMULSEWReadAdvanceF<"ReadVFSinV", 0>;
+} // Unsupported
+} // UnsupportedSchedYushuxinSinV

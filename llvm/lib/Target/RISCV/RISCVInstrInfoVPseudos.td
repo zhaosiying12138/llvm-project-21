@@ -2555,6 +2555,19 @@ multiclass VPseudoVRCP_V_RM {
   }
 }
 
+multiclass VPseudoVSIN_V {
+  foreach m = MxListF in {
+    defvar mx = m.MX;
+    foreach e = SchedSEWSet<mx, isF=1>.val in {
+      let VLMul = m.value in {
+        def "_V_" # mx # "_E" # e
+            : VPseudoUnaryNoMask<m.vrclass, m.vrclass>,
+              SchedUnary<"WriteVFSinV", "ReadVFSinV", mx, e, forcePassthruRead=true>;
+      }
+    }
+  }
+}
+
 multiclass PseudoVEXT_VF2 {
   defvar constraints = "@earlyclobber $rd";
   foreach m = MxListVF2 in {
@@ -4586,6 +4599,17 @@ multiclass VPatUnaryV_V<string intrinsic, string instruction,
   }
 }
 
+multiclass VPatUnaryV_V_NOMASK<string intrinsic, string instruction,
+                        list<VTypeInfo> vtilist, bit isSEWAware = 0> {
+  foreach vti = vtilist in {
+    let Predicates = GetVTypePredicates<vti>.Predicates in {
+      def : VPatUnaryNoMask<intrinsic, instruction, "V",
+                            vti.Vector, vti.Vector, vti.Log2SEW,
+                            vti.LMul, vti.RegClass, vti.RegClass, isSEWAware>;
+    }
+  }
+}
+
 multiclass VPatUnaryV_V_RM<string intrinsic, string instruction,
                         list<VTypeInfo> vtilist, bit isSEWAware = 0> {
   foreach vti = vtilist in {
@@ -6433,6 +6457,9 @@ defm PseudoVFSQRT : VPseudoVSQR_V_RM;
 let mayRaiseFPException = true in
 defm PseudoVFRSQRT7 : VPseudoVRCP_V;
 
+let mayRaiseFPException = true, Size = 20 in
+defm PseudoVFSIN : VPseudoVSIN_V;
+
 //===----------------------------------------------------------------------===//
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction
 //===----------------------------------------------------------------------===//
@@ -7090,6 +7117,8 @@ defm : VPatUnaryV_V_RM<"int_riscv_vfsqrt", "PseudoVFSQRT", AllFloatVectors, isSE
 // 13.9. Vector Floating-Point Reciprocal Square-Root Estimate Instruction
 //===----------------------------------------------------------------------===//
 defm : VPatUnaryV_V<"int_riscv_vfrsqrt7", "PseudoVFRSQRT7", AllFloatVectors, isSEWAware=1>;
+
+defm : VPatUnaryV_V_NOMASK<"int_riscv_vfsin", "PseudoVFSIN", AllFloatVectors, isSEWAware=1>;
 
 //===----------------------------------------------------------------------===//
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction

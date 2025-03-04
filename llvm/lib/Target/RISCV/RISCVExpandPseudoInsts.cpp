@@ -456,6 +456,9 @@ private:
   bool expandLoadTLSDescAddress(MachineBasicBlock &MBB,
                                 MachineBasicBlock::iterator MBBI,
                                 MachineBasicBlock::iterator &NextMBBI);
+  bool expandPseudoVFSIN(MachineBasicBlock &MBB,
+                                MachineBasicBlock::iterator MBBI,
+                                MachineBasicBlock::iterator &NextMBBI);
 
 #ifndef NDEBUG
   unsigned getInstSizeInBytes(const MachineFunction &MF) const {
@@ -463,6 +466,14 @@ private:
     for (auto &MBB : MF)
       for (auto &MI : MBB)
         Size += TII->getInstSizeInBytes(MI);
+    return Size;
+  }
+
+  unsigned getInstSizeInBytesPostPreRAPseduoExpand(const MachineFunction &MF) const {
+    unsigned Size = 0;
+    for (auto &MBB : MF)
+      for (auto &MI : MBB)
+        Size += TII->getInstSizeInBytesPostPreRAPseduoExpand(MI);
     return Size;
   }
 #endif
@@ -483,7 +494,7 @@ bool RISCVPreRAExpandPseudo::runOnMachineFunction(MachineFunction &MF) {
     Modified |= expandMBB(MBB);
 
 #ifndef NDEBUG
-  const unsigned NewSize = getInstSizeInBytes(MF);
+  const unsigned NewSize = getInstSizeInBytesPostPreRAPseduoExpand(MF);
   assert(OldSize >= NewSize);
 #endif
   return Modified;
@@ -502,6 +513,122 @@ bool RISCVPreRAExpandPseudo::expandMBB(MachineBasicBlock &MBB) {
   return Modified;
 }
 
+bool RISCVPreRAExpandPseudo::expandPseudoVFSIN(
+    MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+    MachineBasicBlock::iterator &NextMBBI)
+{
+  unsigned FmulOpc;
+  unsigned FmvOpc;
+  const TargetRegisterClass *fpImmRegClass;
+  int fpImm1, fpImm2;
+  switch (MBBI->getOpcode()) {
+    case RISCV::PseudoVFSIN_V_M1_E32: FmulOpc = RISCV::PseudoVFMUL_VFPR32_M1_E32; break;
+    case RISCV::PseudoVFSIN_V_M2_E32: FmulOpc = RISCV::PseudoVFMUL_VFPR32_M2_E32; break;
+    case RISCV::PseudoVFSIN_V_M4_E32: FmulOpc = RISCV::PseudoVFMUL_VFPR32_M4_E32; break;
+    case RISCV::PseudoVFSIN_V_M8_E32: FmulOpc = RISCV::PseudoVFMUL_VFPR32_M8_E32; break;
+    case RISCV::PseudoVFSIN_V_M1_E16: FmulOpc = RISCV::PseudoVFMUL_VFPR16_M1_E16; break;
+    case RISCV::PseudoVFSIN_V_M2_E16: FmulOpc = RISCV::PseudoVFMUL_VFPR16_M2_E16; break;
+    case RISCV::PseudoVFSIN_V_M4_E16: FmulOpc = RISCV::PseudoVFMUL_VFPR16_M4_E16; break;
+    case RISCV::PseudoVFSIN_V_M8_E16: FmulOpc = RISCV::PseudoVFMUL_VFPR16_M8_E16; break;
+  }
+
+  switch (MBBI->getOpcode()) {
+    case RISCV::PseudoVFSIN_V_M1_E32:
+    case RISCV::PseudoVFSIN_V_M2_E32:
+    case RISCV::PseudoVFSIN_V_M4_E32:
+    case RISCV::PseudoVFSIN_V_M8_E32:
+      FmvOpc = RISCV::FMV_W_X;
+      fpImmRegClass = &RISCV::FPR32RegClass;
+      fpImm1 = 0x3e230;
+      fpImm2 = -1661;
+      break;
+
+    case RISCV::PseudoVFSIN_V_M1_E16:
+    case RISCV::PseudoVFSIN_V_M2_E16:
+    case RISCV::PseudoVFSIN_V_M4_E16:
+    case RISCV::PseudoVFSIN_V_M8_E16:
+      FmvOpc = RISCV::FMV_H_X;
+      fpImmRegClass = &RISCV::FPR16RegClass;
+      fpImm1 = 0x3;
+      fpImm2 = 280;
+      break;
+  }
+
+  DebugLoc DL = MBBI->getDebugLoc();
+  MachineInstr &MI = *MBBI;
+
+  // 获取操作数
+  Register DstReg = MI.getOperand(0).getReg();
+  Register NoReg = MI.getOperand(1).getReg();
+  Register SrcReg = MI.getOperand(2).getReg();
+
+  Register AVLReg;
+  int64_t AVLImm;
+  bool isAVLReg = MI.getOperand(3).isReg();
+  if(isAVLReg)
+    AVLReg = MI.getOperand(3).getReg();
+  else {
+    assert(MI.getOperand(3).isImm());
+    AVLImm = MI.getOperand(3).getImm();
+  }
+
+  // Register VLReg = MI.getOperand(3).getImm();
+  int64_t Sew = MI.getOperand(4).getImm();
+  int64_t Policy = MI.getOperand(5).getImm();
+
+  // Step 1: 生成fmv.w.x/fmv.h.x指令得到1/2pi浮点数
+  Register IntImmReg1 = MBB.getParent()->getRegInfo().createVirtualRegister(&RISCV::GPRNoX0RegClass);
+  Register IntImmReg2 = MBB.getParent()->getRegInfo().createVirtualRegister(&RISCV::GPRNoX0RegClass);
+  // set IntImmReg to 0x3e22f983 for fp32 & 0x3118 for fp16
+  BuildMI(MBB, MBBI, DL, TII->get(RISCV::LUI), IntImmReg1)
+    .addImm(fpImm1);
+  BuildMI(MBB, MBBI, DL, TII->get(RISCV::ADDI), IntImmReg2)
+    .addReg(IntImmReg1, RegState::Kill)
+    .addImm(fpImm2);    
+  Register FpImmReg = MBB.getParent()->getRegInfo().createVirtualRegister(fpImmRegClass);
+  BuildMI(MBB, MBBI, DL, TII->get(FmvOpc), FpImmReg)
+      .addReg(IntImmReg2, RegState::Kill);
+
+  // Step 2: 生成向量乘法指令 & sin指令
+  Register TmpReg = MBB.getParent()->getRegInfo().createVirtualRegister(MBB.getParent()->getRegInfo().getRegClass(DstReg));
+  if(isAVLReg) {
+    BuildMI(MBB, MBBI, DL, TII->get(FmulOpc), TmpReg)
+      .addReg(NoReg)            // 输入向量寄存器 (noreg)
+      .addReg(SrcReg)           // 输入向量寄存器 (vs2)
+      .addReg(FpImmReg, RegState::Kill)         // 标量寄存器 (rs1，存储1/2pi的FPR)
+      .addImm(7)                  // 舍入模式 rm=7（Not Changed）
+      .addReg(AVLReg)            // avl（向量长度Reg or Imm，如x10 or 13）
+      .addImm(Sew)                // sew=32（log2(32 or 16)=5，编码为5 or 4）
+      .addImm(Policy);            // 尾部策略：尾部元素不保留
+
+    BuildMI(MBB, MBBI, DL, TII->get(MBBI->getOpcode()), DstReg)
+      .addReg(NoReg)
+      .addReg(TmpReg, RegState::Kill)
+      .addReg(AVLReg)
+      .addImm(Sew)
+      .addImm(Policy);
+  } else {
+    BuildMI(MBB, MBBI, DL, TII->get(FmulOpc), TmpReg)
+      .addReg(NoReg)            // 输入向量寄存器 (noreg)
+      .addReg(SrcReg)           // 输入向量寄存器 (vs2)
+      .addReg(FpImmReg, RegState::Kill)         // 标量寄存器 (rs1，存储1/2pi的FPR)
+      .addImm(7)                  // 舍入模式 rm=7（Not Changed）
+      .addImm(AVLImm)            // avl（向量长度Reg or Imm，如x10 or 13）
+      .addImm(Sew)                // sew=32（log2(32 or 16)=5，编码为5 or 4）
+      .addImm(Policy);            // 尾部策略：尾部元素不保留
+
+    BuildMI(MBB, MBBI, DL, TII->get(MBBI->getOpcode()), DstReg)
+      .addReg(NoReg)
+      .addReg(TmpReg, RegState::Kill)
+      .addImm(AVLImm)
+      .addImm(Sew)
+      .addImm(Policy);
+  }
+
+  MI.eraseFromParent();
+  return true;
+}
+
 bool RISCVPreRAExpandPseudo::expandMI(MachineBasicBlock &MBB,
                                       MachineBasicBlock::iterator MBBI,
                                       MachineBasicBlock::iterator &NextMBBI) {
@@ -517,6 +644,15 @@ bool RISCVPreRAExpandPseudo::expandMI(MachineBasicBlock &MBB,
     return expandLoadTLSGDAddress(MBB, MBBI, NextMBBI);
   case RISCV::PseudoLA_TLSDESC:
     return expandLoadTLSDescAddress(MBB, MBBI, NextMBBI);
+  case RISCV::PseudoVFSIN_V_M1_E32:
+  case RISCV::PseudoVFSIN_V_M2_E32:
+  case RISCV::PseudoVFSIN_V_M4_E32:
+  case RISCV::PseudoVFSIN_V_M8_E32:
+  case RISCV::PseudoVFSIN_V_M1_E16:
+  case RISCV::PseudoVFSIN_V_M2_E16:
+  case RISCV::PseudoVFSIN_V_M4_E16:
+  case RISCV::PseudoVFSIN_V_M8_E16:
+    return expandPseudoVFSIN(MBB, MBBI, NextMBBI);
   }
   return false;
 }

@@ -1879,6 +1879,11 @@ defm vfrsqrt7 : RVVOutBuiltinSet<"vfrsqrt7", "fd", [["v", "v", "vv"]]>;
 let RequiredFeatures = ["Zvfh"] in
   defm vfrsqrt7 : RVVOutBuiltinSet<"vfrsqrt7", "x", [["v", "v", "vv"]]>;
 
+let HasMasked = false, RequiredFeatures = ["Zvyushuxinsin"] in
+  defm vfsin : RVVOutBuiltinSet<"vfsin", "f", [["v", "v", "vv"]]>;
+let HasMasked = false, RequiredFeatures = ["Zvyushuxinsin", "Zvfh"] in
+  defm vfsin : RVVOutBuiltinSet<"vfsin", "x", [["v", "v", "vv"]]>;
+
 // 13.11. Vector Floating-Point MIN/MAX Instructions
 defm vfmin : RVVFloatingBinBuiltinSet;
 defm vfmax : RVVFloatingBinBuiltinSet;

@@ -224,6 +224,7 @@ void RISCVIntrinsicManagerImpl::ConstructRVVIntrinsics(
       {"zvfbfwma", RVV_REQ_Zvfbfwma},
       {"zvfbfmin", RVV_REQ_Zvfbfmin},
       {"zvfh", RVV_REQ_Zvfh},
+      {"zvyushuxinsin", RVV_REQ_Zvyushuxinsin},
       {"experimental", RVV_REQ_Experimental}};
 
   // Construction of RVVIntrinsicRecords need to sync with createRVVIntrinsics

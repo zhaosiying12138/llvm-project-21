@@ -591,6 +591,10 @@ void RISCVPassConfig::addMachineSSAOptimization() {
 
 void RISCVPassConfig::addPreRegAlloc() {
   addPass(createRISCVPreRAExpandPseudoPass());
+
+  addPass(&MachineCSELegacyID);
+  addPass(&DeadMachineInstructionElimID);
+
   if (TM->getOptLevel() != CodeGenOptLevel::None) {
     addPass(createRISCVMergeBaseOffsetOptPass());
     if (EnableVLOptimizer)

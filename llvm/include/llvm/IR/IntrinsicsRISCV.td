@@ -1547,6 +1547,8 @@ let TargetPrefix = "riscv" in {
   defm vfrsqrt7 : RISCVUnaryAA;
   defm vfrec7 : RISCVUnaryAARoundingMode;
 
+  defm vfsin : RISCVUnaryAA;
+
   defm vfmin : RISCVBinaryAAX;
   defm vfmax : RISCVBinaryAAX;
 
