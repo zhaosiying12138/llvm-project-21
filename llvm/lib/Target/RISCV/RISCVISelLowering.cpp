@@ -45,6 +45,7 @@
 #include "llvm/Support/KnownBits.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cmath>
 #include <optional>
 
 using namespace llvm;
@@ -6206,7 +6207,7 @@ static bool hasPassthruOp(unsigned Opcode) {
          Opcode <= RISCVISD::LAST_RISCV_STRICTFP_OPCODE &&
          "not a RISC-V target specific op");
   static_assert(RISCVISD::LAST_VL_VECTOR_OP - RISCVISD::FIRST_VL_VECTOR_OP ==
-                    128 &&
+                    129 &&
                 RISCVISD::LAST_RISCV_STRICTFP_OPCODE -
                         ISD::FIRST_TARGET_STRICTFP_OPCODE ==
                     21 &&
@@ -6232,7 +6233,7 @@ static bool hasMaskOp(unsigned Opcode) {
          Opcode <= RISCVISD::LAST_RISCV_STRICTFP_OPCODE &&
          "not a RISC-V target specific op");
   static_assert(RISCVISD::LAST_VL_VECTOR_OP - RISCVISD::FIRST_VL_VECTOR_OP ==
-                    128 &&
+                    129 &&
                 RISCVISD::LAST_RISCV_STRICTFP_OPCODE -
                         ISD::FIRST_TARGET_STRICTFP_OPCODE ==
                     21 &&
@@ -9660,6 +9661,23 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
       break;
 
     return NewNode;
+  }
+  case Intrinsic::riscv_vfsin: {
+    MVT VT = Op.getSimpleValueType();
+    SDValue Mask = getDefaultScalableVLOps(VT, DL, DAG, Subtarget).first;
+    SDValue Src = Op->getOperand(2);
+    SDValue VL = Op->getOperand(3);
+
+    SDValue RcpPi = DAG.getConstantFP(0.5f / M_PI, DL, VT.getVectorElementType());
+    SDValue RcpPiVec = DAG.getNode(RISCVISD::VFMV_V_F_VL, DL, VT,
+      DAG.getUNDEF(VT), RcpPi, VL);
+    SDValue TmpMul = DAG.getNode(RISCVISD::FMUL_VL, DL, VT,
+      RcpPiVec, Src, DAG.getUNDEF(VT), Mask, VL);
+
+    return DAG.getNode(RISCVISD::FSIN_VL, DL, VT, TmpMul, Mask, VL);
+  }
+  case Intrinsic::riscv_vfsin_mask: {
+    assert(0 && "[ZSY_ERROR] Not implemented!");
   }
   }
 
@@ -20441,6 +20459,7 @@ const char *RISCVTargetLowering::getTargetNodeName(unsigned Opcode) const {
   NODE_NAME_CASE(SF_VC_V_IVW_SE)
   NODE_NAME_CASE(SF_VC_V_VVW_SE)
   NODE_NAME_CASE(SF_VC_V_FVW_SE)
+  NODE_NAME_CASE(FSIN_VL)
   }
   // clang-format on
   return nullptr;

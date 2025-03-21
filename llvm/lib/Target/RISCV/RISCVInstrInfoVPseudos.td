@@ -7118,7 +7118,7 @@ defm : VPatUnaryV_V_RM<"int_riscv_vfsqrt", "PseudoVFSQRT", AllFloatVectors, isSE
 //===----------------------------------------------------------------------===//
 defm : VPatUnaryV_V<"int_riscv_vfrsqrt7", "PseudoVFRSQRT7", AllFloatVectors, isSEWAware=1>;
 
-defm : VPatUnaryV_V_NOMASK<"int_riscv_vfsin", "PseudoVFSIN", AllFloatVectors, isSEWAware=1>;
+// defm : VPatUnaryV_V_NOMASK<"int_riscv_vfsin", "PseudoVFSIN", AllFloatVectors, isSEWAware=1>;
 
 //===----------------------------------------------------------------------===//
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction

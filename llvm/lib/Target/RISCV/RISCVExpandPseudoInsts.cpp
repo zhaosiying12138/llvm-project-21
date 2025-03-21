@@ -644,15 +644,15 @@ bool RISCVPreRAExpandPseudo::expandMI(MachineBasicBlock &MBB,
     return expandLoadTLSGDAddress(MBB, MBBI, NextMBBI);
   case RISCV::PseudoLA_TLSDESC:
     return expandLoadTLSDescAddress(MBB, MBBI, NextMBBI);
-  case RISCV::PseudoVFSIN_V_M1_E32:
-  case RISCV::PseudoVFSIN_V_M2_E32:
-  case RISCV::PseudoVFSIN_V_M4_E32:
-  case RISCV::PseudoVFSIN_V_M8_E32:
-  case RISCV::PseudoVFSIN_V_M1_E16:
-  case RISCV::PseudoVFSIN_V_M2_E16:
-  case RISCV::PseudoVFSIN_V_M4_E16:
-  case RISCV::PseudoVFSIN_V_M8_E16:
-    return expandPseudoVFSIN(MBB, MBBI, NextMBBI);
+  // case RISCV::PseudoVFSIN_V_M1_E32:
+  // case RISCV::PseudoVFSIN_V_M2_E32:
+  // case RISCV::PseudoVFSIN_V_M4_E32:
+  // case RISCV::PseudoVFSIN_V_M8_E32:
+  // case RISCV::PseudoVFSIN_V_M1_E16:
+  // case RISCV::PseudoVFSIN_V_M2_E16:
+  // case RISCV::PseudoVFSIN_V_M4_E16:
+  // case RISCV::PseudoVFSIN_V_M8_E16:
+  //   return expandPseudoVFSIN(MBB, MBBI, NextMBBI);
   }
   return false;
 }
