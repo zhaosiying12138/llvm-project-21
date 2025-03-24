@@ -9667,14 +9667,7 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
     SDValue Mask = getDefaultScalableVLOps(VT, DL, DAG, Subtarget).first;
     SDValue Src = Op->getOperand(2);
     SDValue VL = Op->getOperand(3);
-
-    SDValue RcpPi = DAG.getConstantFP(0.5f / M_PI, DL, VT.getVectorElementType());
-    SDValue RcpPiVec = DAG.getNode(RISCVISD::VFMV_V_F_VL, DL, VT,
-      DAG.getUNDEF(VT), RcpPi, VL);
-    SDValue TmpMul = DAG.getNode(RISCVISD::FMUL_VL, DL, VT,
-      RcpPiVec, Src, DAG.getUNDEF(VT), Mask, VL);
-
-    return DAG.getNode(RISCVISD::FSIN_VL, DL, VT, TmpMul, Mask, VL);
+    return DAG.getNode(RISCVISD::FSIN_VL, DL, VT, Src, Mask, VL);
   }
   case Intrinsic::riscv_vfsin_mask: {
     assert(0 && "[ZSY_ERROR] Not implemented!");

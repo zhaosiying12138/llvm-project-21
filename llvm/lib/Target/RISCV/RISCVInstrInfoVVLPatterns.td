@@ -2424,17 +2424,17 @@ defm : VPatFPSetCCVL_VV_VF_FV<any_riscv_fsetccs_vl, SETLE,
 defm : VPatFPSetCCVL_VV_VF_FV<any_riscv_fsetccs_vl, SETOLE,
                               "PseudoVMFLE", "PseudoVMFGE">;
 
-def riscv_fsin_vl : SDNode<"RISCVISD::FSIN_VL", SDT_RISCVFPUnOp_VL>;
+// def riscv_fsin_vl : SDNode<"RISCVISD::FSIN_VL", SDT_RISCVFPUnOp_VL>;
 
-foreach vti = AllFloatVectors in {
-  let Predicates = GetVTypePredicates<vti>.Predicates in {
-    // Yushuxin extension Instruction
-    def : Pat<(riscv_fsin_vl (vti.Vector vti.RegClass:$rs2), (vti.Mask V0), VLOpFrag),
-              (!cast<Instruction>("PseudoVFSIN_V_"#vti.LMul.MX # "_E" # vti.SEW)
-                 (vti.Vector (IMPLICIT_DEF)), vti.RegClass:$rs2,
-                  GPR:$vl, vti.Log2SEW, TA_MA)>;
-  }
-}
+// foreach vti = AllFloatVectors in {
+//   let Predicates = GetVTypePredicates<vti>.Predicates in {
+//     // Yushuxin extension Instruction
+//     def : Pat<(riscv_fsin_vl (vti.Vector vti.RegClass:$rs2), (vti.Mask V0), VLOpFrag),
+//               (!cast<Instruction>("PseudoVFSIN_V_"#vti.LMul.MX # "_E" # vti.SEW)
+//                  (vti.Vector (IMPLICIT_DEF)), vti.RegClass:$rs2,
+//                   GPR:$vl, vti.Log2SEW, TA_MA)>;
+//   }
+// }
 
 foreach vti = AllFloatVectors in {
   let Predicates = GetVTypePredicates<vti>.Predicates in {

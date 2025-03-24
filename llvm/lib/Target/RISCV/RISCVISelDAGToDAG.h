@@ -269,6 +269,13 @@ struct VLX_VSXPseudo {
   uint16_t Pseudo;
 };
 
+struct VFSINPseudo {
+  uint16_t Masked : 1;
+  uint16_t Log2SEW : 3;
+  uint16_t LMUL : 3;
+  uint16_t Pseudo;
+};
+
 #define GET_RISCVVSSEGTable_DECL
 #define GET_RISCVVLSEGTable_DECL
 #define GET_RISCVVLXSEGTable_DECL
@@ -277,6 +284,7 @@ struct VLX_VSXPseudo {
 #define GET_RISCVVSETable_DECL
 #define GET_RISCVVLXTable_DECL
 #define GET_RISCVVSXTable_DECL
+#define GET_RISCVVFSINTable_DECL
 } // namespace RISCV
 
 } // namespace llvm

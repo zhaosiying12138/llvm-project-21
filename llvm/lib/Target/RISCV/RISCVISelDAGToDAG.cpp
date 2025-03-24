@@ -22,6 +22,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cmath>
 
 using namespace llvm;
 
@@ -43,6 +44,7 @@ namespace llvm::RISCV {
 #define GET_RISCVVSETable_IMPL
 #define GET_RISCVVLXTable_IMPL
 #define GET_RISCVVSXTable_IMPL
+#define GET_RISCVVFSINTable_IMPL
 #include "RISCVGenSearchableTables.inc"
 } // namespace llvm::RISCV
 
@@ -57,6 +59,35 @@ void RISCVDAGToDAGISel::PreprocessISelDAG() {
 
     SDValue Result;
     switch (N->getOpcode()) {
+    case RISCVISD::FSIN_VL: {
+      EVT VT = N->getValueType(0);
+      SDLoc DL(N);
+      MVT ContainerVT = N->getSimpleValueType(0);
+      SDValue Src = N->getOperand(0);
+      SDValue Mask = N->getOperand(1);
+      SDValue VL;
+      selectVLOp(N->getOperand(2), VL);
+
+      SDValue RcpPi = CurDAG->getConstantFP(0.5f / M_PI, DL, ContainerVT.getVectorElementType());
+      SDValue RcpPiVec = CurDAG->getNode(RISCVISD::VFMV_V_F_VL, DL, ContainerVT,
+                                        CurDAG->getUNDEF(ContainerVT), RcpPi, VL);
+      SDValue TmpMul = CurDAG->getNode(RISCVISD::FMUL_VL, DL, VT,
+                      RcpPiVec, Src, CurDAG->getUNDEF(VT), Mask, VL);
+
+      MVT XLenVT = Subtarget->getXLenVT();
+      uint16_t Log2SEW = Log2_32(VT.getScalarSizeInBits());
+      SDValue SEW = CurDAG->getTargetConstant(Log2SEW, DL, XLenVT);
+      RISCVII::VLMUL LMUL = RISCVTargetLowering::getLMUL(ContainerVT);      
+      uint64_t Policy = RISCVII::MASK_AGNOSTIC | RISCVII::TAIL_AGNOSTIC;
+      SDValue PolicyOp = CurDAG->getTargetConstant(Policy, DL, XLenVT);
+
+      const RISCV::VFSINPseudo *P =
+          RISCV::getVFSINPseudo(0, Log2SEW, static_cast<unsigned>(LMUL));
+      Result = SDValue(CurDAG->getMachineNode(P->Pseudo, DL, VT,
+          {CurDAG->getUNDEF(ContainerVT), TmpMul, VL,SEW,PolicyOp}), 0);
+      break;
+    }
+
     case ISD::SPLAT_VECTOR: {
       // Convert integer SPLAT_VECTOR to VMV_V_X_VL and floating-point
       // SPLAT_VECTOR to VFMV_V_F_VL to reduce isel burden.

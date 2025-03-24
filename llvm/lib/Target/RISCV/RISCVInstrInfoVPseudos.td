@@ -2555,14 +2555,30 @@ multiclass VPseudoVRCP_V_RM {
   }
 }
 
-multiclass VPseudoVSIN_V {
+class RISCVVFSIN<bit M, bits<3> S, bits<3> L> {
+  bits<1> Masked = M;
+  bits<3> Log2SEW = S;
+  bits<3> LMUL = L;
+  Pseudo Pseudo = !cast<Pseudo>(NAME);
+}
+
+def RISCVVFSINTable : GenericTable {
+  let FilterClass = "RISCVVFSIN";
+  let CppTypeName = "VFSINPseudo";
+  let Fields = ["Masked", "Log2SEW", "LMUL", "Pseudo"];
+  let PrimaryKey = ["Masked", "Log2SEW", "LMUL"];
+  let PrimaryKeyName = "getVFSINPseudo";
+}
+
+multiclass VPseudoVFSIN_V {
   foreach m = MxListF in {
     defvar mx = m.MX;
     foreach e = SchedSEWSet<mx, isF=1>.val in {
       let VLMul = m.value in {
         def "_V_" # mx # "_E" # e
             : VPseudoUnaryNoMask<m.vrclass, m.vrclass>,
-              SchedUnary<"WriteVFSinV", "ReadVFSinV", mx, e, forcePassthruRead=true>;
+              SchedUnary<"WriteVFSinV", "ReadVFSinV", mx, e, forcePassthruRead=true>,
+              RISCVVFSIN</*Masked*/0, !logtwo(e), VLMul>;
       }
     }
   }
@@ -6457,8 +6473,8 @@ defm PseudoVFSQRT : VPseudoVSQR_V_RM;
 let mayRaiseFPException = true in
 defm PseudoVFRSQRT7 : VPseudoVRCP_V;
 
-let mayRaiseFPException = true, Size = 20 in
-defm PseudoVFSIN : VPseudoVSIN_V;
+let mayRaiseFPException = true in
+defm PseudoVFSIN : VPseudoVFSIN_V;
 
 //===----------------------------------------------------------------------===//
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction
