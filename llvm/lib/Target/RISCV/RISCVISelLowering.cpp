@@ -28,6 +28,7 @@
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/SelectionDAGAddressAnalysis.h"
+#include "llvm/CodeGen/SelectionDAGNodes.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/DiagnosticInfo.h"
@@ -9667,6 +9668,17 @@ SDValue RISCVTargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
     SDValue Mask = getDefaultScalableVLOps(VT, DL, DAG, Subtarget).first;
     SDValue Src = Op->getOperand(2);
     SDValue VL = Op->getOperand(3);
+
+    // if (VT == MVT::nxv32f16)
+    //   return SplitVectorOp(Op, DAG);
+
+    // if (VT.getVectorElementType() == MVT::f16) {
+    //   MVT F32VecVT = MVT::getVectorVT(MVT::f32, VT.getVectorElementCount());
+    //   SDValue TmpPromote = DAG.getNode(ISD::FP_EXTEND, DL, F32VecVT, Src);
+    //   SDValue TmpResult = DAG.getNode(RISCVISD::FSIN_VL, DL, F32VecVT, TmpPromote, Mask, VL);
+    //   return DAG.getNode(ISD::FP_ROUND, DL, VT, TmpResult, Mask, VL);
+    // }
+
     return DAG.getNode(RISCVISD::FSIN_VL, DL, VT, Src, Mask, VL);
   }
   case Intrinsic::riscv_vfsin_mask: {
