@@ -453,6 +453,7 @@ defm "" : LMULSEWSchedWritesF<"WriteVFSqrtV">;
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction
 defm "" : LMULSEWSchedWritesF<"WriteVFRecpV">;
 defm "" : LMULSEWSchedWritesF<"WriteVFSinV">;
+defm "" : LMULSEWSchedWritesF<"WriteVFExpV">;
 // 13.11. Vector Floating-Point MIN/MAX Instructions
 defm "" : LMULSEWSchedWritesF<"WriteVFMinMaxV">;
 defm "" : LMULSEWSchedWritesF<"WriteVFMinMaxF">;
@@ -681,6 +682,7 @@ defm "" : LMULSEWSchedReadsF<"ReadVFSqrtV">;
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction
 defm "" : LMULSEWSchedReadsF<"ReadVFRecpV">;
 defm "" : LMULSEWSchedReadsF<"ReadVFSinV">;
+defm "" : LMULSEWSchedReadsF<"ReadVFExpV">;
 // 13.11. Vector Floating-Point MIN/MAX Instructions
 defm "" : LMULSEWSchedReadsF<"ReadVFMinMaxV">;
 defm "" : LMULSEWSchedReadsF<"ReadVFMinMaxF">;
@@ -925,6 +927,7 @@ defm "" : LMULSEWWriteResFW<"WriteVFWMulAddF", []>;
 defm "" : LMULSEWWriteResF<"WriteVFSqrtV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFRecpV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFSinV", []>;
+defm "" : LMULSEWWriteResF<"WriteVFExpV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFMinMaxV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFMinMaxF", []>;
 defm "" : LMULSEWWriteResF<"WriteVFSgnjV", []>;
@@ -1084,6 +1087,7 @@ defm "" : LMULSEWReadAdvanceFW<"ReadVFWMulAddF", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFSqrtV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFRecpV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFSinV", 0>;
+defm "" : LMULSEWReadAdvanceF<"ReadVFExpV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFMinMaxV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFMinMaxF", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFSgnjV", 0>;
@@ -1167,5 +1171,7 @@ multiclass UnsupportedSchedYushuxinSinV {
 let Unsupported = true in {
   defm "" : LMULSEWWriteResF<"WriteVFSinV", []>;
   defm "" : LMULSEWReadAdvanceF<"ReadVFSinV", 0>;
+  defm "" : LMULSEWWriteResF<"WriteVFExpV", []>;
+  defm "" : LMULSEWReadAdvanceF<"ReadVFExpV", 0>;
 } // Unsupported
 } // UnsupportedSchedYushuxinSinV

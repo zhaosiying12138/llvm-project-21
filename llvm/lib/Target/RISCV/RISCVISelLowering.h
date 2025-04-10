@@ -396,8 +396,9 @@ enum NodeType : unsigned {
 
   // Yushuxin extension
   FSIN_VL,
+  FEXP_VL,
 
-  LAST_VL_VECTOR_OP = FSIN_VL,
+  LAST_VL_VECTOR_OP = FEXP_VL,
 
   // Read VLENB CSR
   READ_VLENB,

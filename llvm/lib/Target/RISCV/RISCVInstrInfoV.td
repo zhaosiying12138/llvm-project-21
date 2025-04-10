@@ -1431,6 +1431,14 @@ multiclass VSIN_FV_VS2<string opcodestr, bits<6> funct6, bits<5> vs1> {
 let mayRaiseFPException = true in
 defm VFSIN_V : VSIN_FV_VS2<"vfsin.v", 0b010011, 0b10100>;
 
+multiclass VEXP_FV_VS2<string opcodestr, bits<6> funct6, bits<5> vs1> {
+  def "" : VALUVs2<funct6, vs1, OPFVV, opcodestr>,
+           SchedUnaryMC<"WriteVFExpV", "ReadVFExpV">;
+}
+
+let mayRaiseFPException = true in
+defm VFEXP_V : VEXP_FV_VS2<"yushuxin.vfexp.v", 0b010011, 0b00111>;
+
 // Vector Floating-Point MIN/MAX Instructions
 let mayRaiseFPException = true in {
 defm VFMIN_V : VMINMAX_FV_V_F<"vfmin", 0b000100>;

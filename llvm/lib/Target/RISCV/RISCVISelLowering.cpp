@@ -79,6 +79,11 @@ static cl::opt<int>
                        "use for creating a floating-point immediate value"),
               cl::init(2));
 
+static cl::opt<bool>
+    EnableYSXSFUISel(DEBUG_TYPE "-ysx-sfu-isel", cl::Hidden,
+                cl::desc("Enable YuShuXin SFU instruction selection"),
+                cl::init(false));
+          
 RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
                                          const RISCVSubtarget &STI)
     : TargetLowering(TM), Subtarget(STI) {
@@ -1437,6 +1442,9 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
              ISD::STRICT_FCEIL, ISD::STRICT_FFLOOR, ISD::STRICT_FROUND,
              ISD::STRICT_FROUNDEVEN, ISD::STRICT_FNEARBYINT},
             VT, Custom);
+        if (EnableYSXSFUISel) {
+          setOperationAction(ISD::FEXP, VT, Custom);
+        }
       }
 
       // Custom-legalize bitcasts from fixed-length vectors to scalar types.
@@ -6111,6 +6119,7 @@ static unsigned getRISCVVLOp(SDValue Op) {
   OP_CASE(STRICT_FMUL)
   OP_CASE(STRICT_FDIV)
   OP_CASE(STRICT_FSQRT)
+  OP_CASE(FEXP)
   VP_CASE(ADD)        // VP_ADD
   VP_CASE(SUB)        // VP_SUB
   VP_CASE(MUL)        // VP_MUL
@@ -6208,7 +6217,7 @@ static bool hasPassthruOp(unsigned Opcode) {
          Opcode <= RISCVISD::LAST_RISCV_STRICTFP_OPCODE &&
          "not a RISC-V target specific op");
   static_assert(RISCVISD::LAST_VL_VECTOR_OP - RISCVISD::FIRST_VL_VECTOR_OP ==
-                    129 &&
+                    130 &&
                 RISCVISD::LAST_RISCV_STRICTFP_OPCODE -
                         ISD::FIRST_TARGET_STRICTFP_OPCODE ==
                     21 &&
@@ -6234,7 +6243,7 @@ static bool hasMaskOp(unsigned Opcode) {
          Opcode <= RISCVISD::LAST_RISCV_STRICTFP_OPCODE &&
          "not a RISC-V target specific op");
   static_assert(RISCVISD::LAST_VL_VECTOR_OP - RISCVISD::FIRST_VL_VECTOR_OP ==
-                    129 &&
+                    130 &&
                 RISCVISD::LAST_RISCV_STRICTFP_OPCODE -
                         ISD::FIRST_TARGET_STRICTFP_OPCODE ==
                     21 &&
@@ -6245,6 +6254,8 @@ static bool hasMaskOp(unsigned Opcode) {
     return true;
   if (Opcode >= RISCVISD::STRICT_FADD_VL &&
       Opcode <= RISCVISD::STRICT_VFROUND_NOEXCEPT_VL)
+    return true;
+  if (Opcode == RISCVISD::FEXP_VL)
     return true;
   return false;
 }
@@ -7237,6 +7248,7 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
   case ISD::USUBSAT:
   case ISD::SADDSAT:
   case ISD::SSUBSAT:
+  case ISD::FEXP:
     return lowerToScalableOp(Op, DAG);
   case ISD::ABDS:
   case ISD::ABDU: {
@@ -20465,6 +20477,7 @@ const char *RISCVTargetLowering::getTargetNodeName(unsigned Opcode) const {
   NODE_NAME_CASE(SF_VC_V_VVW_SE)
   NODE_NAME_CASE(SF_VC_V_FVW_SE)
   NODE_NAME_CASE(FSIN_VL)
+  NODE_NAME_CASE(FEXP_VL)
   }
   // clang-format on
   return nullptr;

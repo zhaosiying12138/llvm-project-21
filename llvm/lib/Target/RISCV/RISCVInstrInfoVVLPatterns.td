@@ -2436,6 +2436,18 @@ defm : VPatFPSetCCVL_VV_VF_FV<any_riscv_fsetccs_vl, SETOLE,
 //   }
 // }
 
+def riscv_fexp_vl : SDNode<"RISCVISD::FEXP_VL", SDT_RISCVFPUnOp_VL>;
+
+foreach vti = AllFloatVectors in {
+  let Predicates = GetVTypePredicates<vti>.Predicates in {
+    // Yushuxin extension Instruction
+    def : Pat<(riscv_fexp_vl (vti.Vector vti.RegClass:$rs2), (vti.Mask V0), VLOpFrag),
+              (!cast<Instruction>("PseudoVFEXP_V_"#vti.LMul.MX # "_E" # vti.SEW)
+                 (vti.Vector (IMPLICIT_DEF)), vti.RegClass:$rs2,
+                  GPR:$vl, vti.Log2SEW, TA_MA)>;
+  }
+}
+
 foreach vti = AllFloatVectors in {
   let Predicates = GetVTypePredicates<vti>.Predicates in {
     // 13.8. Vector Floating-Point Square-Root Instruction
