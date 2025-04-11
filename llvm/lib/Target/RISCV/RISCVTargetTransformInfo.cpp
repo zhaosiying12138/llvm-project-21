@@ -14,6 +14,7 @@
 #include "llvm/CodeGen/CostTable.h"
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/PatternMatch.h"
 #include <cmath>
 #include <optional>
@@ -974,6 +975,16 @@ RISCVTTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
       return LT.first * 8;
     break;
   }
+
+  case Intrinsic::sin: {
+    auto LT = getTypeLegalizationCost(RetTy);
+    if (LT.second.isVector()) {
+      llvm::outs() << "[ZSY] I love YuShuXin Forever!\n";
+      return 1;
+    }
+    break;
+  }
+
   case Intrinsic::umin:
   case Intrinsic::umax:
   case Intrinsic::smin:
