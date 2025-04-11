@@ -22,6 +22,7 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/MemoryLocation.h"
 #include "llvm/Analysis/VectorUtils.h"
+#include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
@@ -1444,6 +1445,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
             VT, Custom);
         if (EnableYSXSFUISel) {
           setOperationAction(ISD::FEXP, VT, Custom);
+          setOperationAction(ISD::FSIN, VT, Custom);
         }
       }
 
@@ -6120,6 +6122,7 @@ static unsigned getRISCVVLOp(SDValue Op) {
   OP_CASE(STRICT_FDIV)
   OP_CASE(STRICT_FSQRT)
   OP_CASE(FEXP)
+  OP_CASE(FSIN)
   VP_CASE(ADD)        // VP_ADD
   VP_CASE(SUB)        // VP_SUB
   VP_CASE(MUL)        // VP_MUL
@@ -6255,7 +6258,7 @@ static bool hasMaskOp(unsigned Opcode) {
   if (Opcode >= RISCVISD::STRICT_FADD_VL &&
       Opcode <= RISCVISD::STRICT_VFROUND_NOEXCEPT_VL)
     return true;
-  if (Opcode == RISCVISD::FEXP_VL)
+  if (Opcode == RISCVISD::FEXP_VL || Opcode == RISCVISD::FSIN_VL)
     return true;
   return false;
 }
@@ -7249,6 +7252,7 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
   case ISD::SADDSAT:
   case ISD::SSUBSAT:
   case ISD::FEXP:
+  case ISD::FSIN:
     return lowerToScalableOp(Op, DAG);
   case ISD::ABDS:
   case ISD::ABDU: {

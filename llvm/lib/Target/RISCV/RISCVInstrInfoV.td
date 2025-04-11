@@ -1429,7 +1429,7 @@ multiclass VSIN_FV_VS2<string opcodestr, bits<6> funct6, bits<5> vs1> {
 }
 
 let mayRaiseFPException = true in
-defm VFSIN_V : VSIN_FV_VS2<"vfsin.v", 0b010011, 0b10100>;
+defm VFSIN_V : VSIN_FV_VS2<"yushuxin.vfsin.v", 0b010011, 0b10100>;
 
 multiclass VEXP_FV_VS2<string opcodestr, bits<6> funct6, bits<5> vs1> {
   def "" : VALUVs2<funct6, vs1, OPFVV, opcodestr>,
