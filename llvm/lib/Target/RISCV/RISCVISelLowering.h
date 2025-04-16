@@ -1055,6 +1055,7 @@ private:
 
   SDValue emitFlushICache(SelectionDAG &DAG, SDValue InChain, SDValue Start,
                           SDValue End, SDValue Flags, SDLoc DL) const;
+  CallingConv::ID getLibcallCallingConv(RTLIB::Libcall Call) const override;
 };
 
 namespace RISCVVIntrinsicsTable {

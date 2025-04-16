@@ -3466,7 +3466,7 @@ public:
   }
 
   /// Get the CallingConv that should be used for the specified libcall.
-  CallingConv::ID getLibcallCallingConv(RTLIB::Libcall Call) const {
+  virtual CallingConv::ID getLibcallCallingConv(RTLIB::Libcall Call) const {
     return Libcalls.getLibcallCallingConv(Call);
   }
 

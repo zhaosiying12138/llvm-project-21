@@ -32,6 +32,7 @@
 #include "llvm/CodeGen/SelectionDAGNodes.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/CodeGen/ValueTypes.h"
+#include "llvm/IR/CallingConv.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/IRBuilder.h"
@@ -1556,6 +1557,17 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
   // corresponding branch. This information is used in CGP/SelectOpt to decide
   // when to convert selects into branches.
   PredictableSelectIsExpensive = Subtarget.predictableSelectIsExpensive();
+}
+
+CallingConv::ID RISCVTargetLowering::getLibcallCallingConv(RTLIB::Libcall Call) const {
+  llvm::outs() << "[ZSY RV] getLibcall CallingConv\n";
+  switch(Call) {
+    case RTLIB::SIN_F32:
+      llvm::outs() << "[ZSY RV] getLibcall RISCV_VectorCall CallingConv for sinf\n";
+      return CallingConv::RISCV_VectorCall;
+    default:
+      return TargetLowering::getLibcallCallingConv(Call);
+  }
 }
 
 EVT RISCVTargetLowering::getSetCCResultType(const DataLayout &DL,
@@ -4263,6 +4275,7 @@ static SDValue lowerBUILD_VECTOR(SDValue Op, SelectionDAG &DAG,
       V = DAG.getNode(ISD::ANY_EXTEND, DL, Subtarget.getXLenVT(), V);
     Vec = DAG.getNode(OpCode, DL, ContainerVT, DAG.getUNDEF(ContainerVT), Vec,
                       V, Mask, VL);
+    // return SDValue();
   }
   if (UndefCount) {
     const SDValue Offset = DAG.getConstant(UndefCount, DL, Subtarget.getXLenVT());
@@ -9127,6 +9140,7 @@ SDValue RISCVTargetLowering::lowerEXTRACT_VECTOR_ELT(SDValue Op,
 
   // If the index is 0, the vector is already in the right position.
   if (!isNullConstant(Idx)) {
+    // return SDValue();
     // Use a VL of 1 to avoid processing more elements than we need.
     auto [Mask, VL] = getDefaultVLOps(1, ContainerVT, DL, DAG, Subtarget);
     Vec = getVSlidedown(DAG, Subtarget, DL, ContainerVT,
