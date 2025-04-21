@@ -4275,7 +4275,7 @@ static SDValue lowerBUILD_VECTOR(SDValue Op, SelectionDAG &DAG,
       V = DAG.getNode(ISD::ANY_EXTEND, DL, Subtarget.getXLenVT(), V);
     Vec = DAG.getNode(OpCode, DL, ContainerVT, DAG.getUNDEF(ContainerVT), Vec,
                       V, Mask, VL);
-    // return SDValue();
+    return SDValue();
   }
   if (UndefCount) {
     const SDValue Offset = DAG.getConstant(UndefCount, DL, Subtarget.getXLenVT());
@@ -5276,6 +5276,16 @@ static SDValue lowerVECTOR_SHUFFLE(SDValue Op, SelectionDAG &DAG,
         Splat = DAG.getBitcast(ContainerVT, Splat);
         return convertFromScalableVector(VT, Splat, DAG, Subtarget);
       }
+
+      // if (SVT.isFloatingPoint()) {
+      //   SDValue ExtractElt = DAG.getNode(ISD::EXTRACT_VECTOR_ELT, DL, SVT,
+      //                                   V1, DAG.getConstant(Lane, DL, XLenVT));
+      //   V1 = convertToScalableVector(ContainerVT, V1, DAG, Subtarget);
+      //   assert(Lane < (int)NumElts && "Unexpected lane!");
+      //   SDValue SplatVec = DAG.getNode(RISCVISD::VFMV_V_F_VL, DL, ContainerVT,
+      //                               DAG.getUNDEF(ContainerVT), ExtractElt, VL);
+      //   return convertFromScalableVector(VT, SplatVec, DAG, Subtarget);
+      // }
 
       V1 = convertToScalableVector(ContainerVT, V1, DAG, Subtarget);
       assert(Lane < (int)NumElts && "Unexpected lane!");
@@ -9140,7 +9150,7 @@ SDValue RISCVTargetLowering::lowerEXTRACT_VECTOR_ELT(SDValue Op,
 
   // If the index is 0, the vector is already in the right position.
   if (!isNullConstant(Idx)) {
-    // return SDValue();
+    return SDValue();
     // Use a VL of 1 to avoid processing more elements than we need.
     auto [Mask, VL] = getDefaultVLOps(1, ContainerVT, DL, DAG, Subtarget);
     Vec = getVSlidedown(DAG, Subtarget, DL, ContainerVT,

@@ -11823,6 +11823,15 @@ bool BoUpSLP::isTreeTinyAndNotFullyVectorizable(bool ForReduction) const {
       }))
     return true;
 
+  // if (!ForReduction && !VectorizableTree.empty() &&
+  //     any_of(VectorizableTree, [&](const std::unique_ptr<TreeEntry> &TE) {
+  //       return TE->isGather() && !isSplat(TE->Scalars) &&
+  //               TE->getOpcode() == Instruction::Load;
+  //     })) {
+  //   llvm::outs() << "[ZSY-SLP] not gather non-uniform loads!\n";
+  //   return true;
+  // }
+
   // We can vectorize the tree if its size is greater than or equal to the
   // minimum size specified by the MinTreeSize command line option.
   if (VectorizableTree.size() >= MinTreeSize)
