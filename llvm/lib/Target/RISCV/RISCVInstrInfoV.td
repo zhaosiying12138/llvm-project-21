@@ -875,6 +875,13 @@ multiclass VMSFS_MV_V<string opcodestr, bits<6> funct6, bits<5> vs1> {
 multiclass VIOTA_MV_V<string opcodestr, bits<6> funct6, bits<5> vs1> {
   def "" : VALUVs2<funct6, vs1, OPMVV, opcodestr>,
            SchedUnaryMC<"WriteVIotaV", "ReadVIotaV">;
+
+  let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
+    let vs2 = 0 in
+      def "_NULLARY" : RVInstV<funct6, vs1, OPMVV, (outs VR:$vd),
+                        (ins VMaskOp:$vm), "viota", "$vd$vm">,
+           SchedUnaryMC<"WriteVIotaV", "ReadVIotaV">;
+  }
 }
 
 multiclass VSHT_IV_V_X_I<string opcodestr, bits<6> funct6> {

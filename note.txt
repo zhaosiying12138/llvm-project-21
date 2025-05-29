@@ -1,0 +1,1 @@
+git log --format=%h 656f1d8b74df5d3f5f2bc75a5f2565df48340757..HEAD -- llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp | while read commit; do   git show --name-only --format= $commit | grep -v '^llvm/test/'; done | sort | uniq -c | sort -nr

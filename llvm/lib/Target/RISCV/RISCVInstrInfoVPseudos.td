@@ -2053,6 +2053,13 @@ multiclass VPseudoVIOTA_M {
                                  RISCVMaskedPseudo<MaskIdx=2>,
                                  SchedUnary<"WriteVIotaV", "ReadVIotaV", mx,
                                             forcePassthruRead=true>;
+      def "_NULLARY_" # mx : VPseudoNullaryNoMask<m.vrclass>,
+                       SchedUnary<"WriteVIotaV", "ReadVIotaV", mx,
+                                  forcePassthruRead=true>;
+      def "_NULLARY_" # mx # "_MASK" : VPseudoNullaryMask<m.vrclass>,
+                                 RISCVMaskedPseudo<MaskIdx=1>,
+                                 SchedUnary<"WriteVIotaV", "ReadVIotaV", mx,
+                                            forcePassthruRead=true>;
     }
   }
 }
