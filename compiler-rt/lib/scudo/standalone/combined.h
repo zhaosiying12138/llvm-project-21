@@ -9,6 +9,8 @@
 #ifndef SCUDO_COMBINED_H_
 #define SCUDO_COMBINED_H_
 
+  #include <stdio.h>
+
 #include "chunk.h"
 #include "common.h"
 #include "flags.h"
@@ -180,6 +182,9 @@ public:
   // be functional, best called from PostInitCallback.
   void initGwpAsan() {
 #ifdef GWP_ASAN_HOOKS
+    printf("initGwpAsan\n");
+    printf("Opt.Enabled = %d\n", getFlags()->GWP_ASAN_Enabled);
+    printf("Opt.SampleRate = %d\n", getFlags()->GWP_ASAN_SampleRate);
     gwp_asan::options::Options Opt;
     Opt.Enabled = getFlags()->GWP_ASAN_Enabled;
     Opt.MaxSimultaneousAllocations =
@@ -326,6 +331,7 @@ public:
 #ifdef GWP_ASAN_HOOKS
     if (UNLIKELY(GuardedAlloc.shouldSample())) {
       if (void *Ptr = GuardedAlloc.allocate(Size, Alignment)) {
+        printf("[ZSY-GWP] alloc = 0x%x\n", Ptr);
         Stats.lock();
         Stats.add(StatAllocated, GuardedAllocSlotSize);
         Stats.sub(StatFree, GuardedAllocSlotSize);
@@ -536,6 +542,7 @@ public:
 
 #ifdef GWP_ASAN_HOOKS
     if (UNLIKELY(GuardedAlloc.pointerIsMine(Ptr))) {
+      printf("[ZSY-GWP] dealloc = 0x%x\n", Ptr);
       GuardedAlloc.deallocate(Ptr);
       Stats.lock();
       Stats.add(StatFree, GuardedAllocSlotSize);

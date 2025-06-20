@@ -19,6 +19,7 @@
 #include "src/__support/macros/properties/cpu_features.h" // LIBC_TARGET_CPU_HAS_FMA
 
 #include <errno.h>
+#include <stdio.h>
 
 #if defined(LIBC_TARGET_CPU_HAS_FMA)
 #include "range_reduction_fma.h"
@@ -29,6 +30,7 @@
 namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(float, sinf, (float x)) {
+  printf("[ZSY-libc] do sinf()\n");
   using FPBits = typename fputil::FPBits<float>;
   FPBits xbits(x);
 

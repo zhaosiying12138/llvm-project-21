@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
 
 using AllocationMetadata = gwp_asan::AllocationMetadata;
 using Error = gwp_asan::Error;
@@ -70,6 +71,7 @@ void GuardedPoolAllocator::init(const options::Options &Opts) {
   State.MaxSimultaneousAllocations = Opts.MaxSimultaneousAllocations;
 
   const size_t PageSize = getPlatformPageSize();
+  printf("PageSize = %d\n", PageSize);
   // getPageAddr() and roundUpTo() assume the page size to be a power of 2.
   assert((PageSize & (PageSize - 1)) == 0);
   State.PageSize = PageSize;
@@ -220,7 +222,6 @@ void *GuardedPoolAllocator::allocate(size_t Size, size_t Alignment) {
   size_t BackingSize = getRequiredBackingSize(Size, Alignment, State.PageSize);
   if (BackingSize > State.maximumAllocationSize())
     return nullptr;
-
   // Protect against recursivity.
   if (getThreadLocals()->RecursiveGuard)
     return nullptr;
@@ -260,9 +261,8 @@ void *GuardedPoolAllocator::allocate(size_t Size, size_t Alignment) {
   Meta->RecordAllocation(UserPtr, Size);
   {
     ScopedLock UL(BacktraceMutex);
-    Meta->AllocationTrace.RecordBacktrace(Backtrace);
+    // Meta->AllocationTrace.RecordBacktrace(Backtrace);
   }
-
   return reinterpret_cast<void *>(UserPtr);
 }
 
@@ -358,7 +358,7 @@ void GuardedPoolAllocator::deallocate(void *Ptr) {
     if (!getThreadLocals()->RecursiveGuard) {
       ScopedRecursiveGuard SRG;
       ScopedLock UL(BacktraceMutex);
-      Meta->DeallocationTrace.RecordBacktrace(Backtrace);
+      // Meta->DeallocationTrace.RecordBacktrace(Backtrace);
     }
   }
 

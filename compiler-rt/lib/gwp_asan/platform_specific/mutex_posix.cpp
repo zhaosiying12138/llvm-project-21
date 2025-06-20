@@ -19,7 +19,7 @@ void Mutex::lock() {
   (void)Status;
 }
 
-bool Mutex::tryLock() { return pthread_mutex_trylock(&Mu) == 0; }
+bool Mutex::tryLock() { return pthread_mutex_lock(&Mu) == 0; }
 
 void Mutex::unlock() {
   int Status = pthread_mutex_unlock(&Mu);

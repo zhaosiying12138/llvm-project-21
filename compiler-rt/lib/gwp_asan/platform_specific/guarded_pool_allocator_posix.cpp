@@ -94,7 +94,8 @@ void GuardedPoolAllocator::deallocateInGuardedPool(void *Ptr,
 }
 
 size_t GuardedPoolAllocator::getPlatformPageSize() {
-  return sysconf(_SC_PAGESIZE);
+  // return sysconf(_SC_PAGESIZE);
+  return 4096;
 }
 
 void GuardedPoolAllocator::installAtFork() {

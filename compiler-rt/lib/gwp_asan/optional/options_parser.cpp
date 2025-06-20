@@ -16,6 +16,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern "C" long __isoc23_strtol(const char *nptr, char **endptr, int base) {
+  return strtol(nptr, endptr, base);
+}
+
 namespace {
 enum class OptionType : uint8_t {
   OT_bool,

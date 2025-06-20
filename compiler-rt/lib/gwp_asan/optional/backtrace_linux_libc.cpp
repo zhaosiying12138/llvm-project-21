@@ -22,7 +22,8 @@ namespace {
 size_t Backtrace(uintptr_t *TraceBuffer, size_t Size) {
   static_assert(sizeof(uintptr_t) == sizeof(void *), "uintptr_t is not void*");
 
-  return backtrace(reinterpret_cast<void **>(TraceBuffer), Size);
+  // return backtrace(reinterpret_cast<void **>(TraceBuffer), Size);
+  return 0;
 }
 
 // We don't need any custom handling for the Segv backtrace - the libc unwinder
@@ -30,7 +31,8 @@ size_t Backtrace(uintptr_t *TraceBuffer, size_t Size) {
 // to avoid the additional frame.
 GWP_ASAN_ALWAYS_INLINE size_t SegvBacktrace(uintptr_t *TraceBuffer, size_t Size,
                                             void * /*Context*/) {
-  return Backtrace(TraceBuffer, Size);
+  // return Backtrace(TraceBuffer, Size);
+  return 0;
 }
 
 static void PrintBacktrace(uintptr_t *Trace, size_t TraceLength,
@@ -40,8 +42,8 @@ static void PrintBacktrace(uintptr_t *Trace, size_t TraceLength,
     return;
   }
 
-  char **BacktraceSymbols =
-      backtrace_symbols(reinterpret_cast<void **>(Trace), TraceLength);
+  char **BacktraceSymbols = nullptr;
+      // backtrace_symbols(reinterpret_cast<void **>(Trace), TraceLength);
 
   for (size_t i = 0; i < TraceLength; ++i) {
     if (!BacktraceSymbols)

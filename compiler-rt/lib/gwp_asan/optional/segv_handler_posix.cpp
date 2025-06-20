@@ -194,6 +194,7 @@ PrintBacktrace_t PrintBacktraceForSignalHandler;
 SegvBacktrace_t BacktraceForSignalHandler;
 
 static void sigSegvHandler(int sig, siginfo_t *info, void *ucontext) {
+  printf("[ZSY-GWP] sigSegvHandler\n");
   const gwp_asan::AllocatorState *State =
       GPAForSignalHandler->getAllocatorState();
   void *FaultAddr = info->si_addr;
@@ -240,6 +241,7 @@ namespace segv_handler {
 void installSignalHandlers(gwp_asan::GuardedPoolAllocator *GPA, Printf_t Printf,
                            PrintBacktrace_t PrintBacktrace,
                            SegvBacktrace_t SegvBacktrace, bool Recoverable) {
+  printf("installSignalHandlers\n");
   assert(GPA && "GPA wasn't provided to installSignalHandlers.");
   assert(Printf && "Printf wasn't provided to installSignalHandlers.");
   assert(PrintBacktrace &&
