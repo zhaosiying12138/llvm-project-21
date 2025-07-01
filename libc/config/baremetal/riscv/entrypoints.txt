@@ -72,6 +72,7 @@ set(TARGET_LIBC_ENTRYPOINTS
     libc.src.stdio.snprintf
     libc.src.stdio.vsprintf
     libc.src.stdio.vsnprintf
+    libc.src.stdio.spike_printf
 
     # stdlib.h entrypoints
     libc.src.stdlib.abort

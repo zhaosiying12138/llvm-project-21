@@ -708,6 +708,12 @@ def StdC : StandardSpec<"stdc"> {
                ArgSpec<VarArgType>]
           >,
           FunctionSpec<
+              "spike_printf",
+              RetValSpec<IntType>,
+              [ArgSpec<ConstCharRestrictedPtr>,
+               ArgSpec<VarArgType>]
+          >,
+          FunctionSpec<
               "fprintf",
               RetValSpec<IntType>,
               [ArgSpec<FILERestrictedPtr>,

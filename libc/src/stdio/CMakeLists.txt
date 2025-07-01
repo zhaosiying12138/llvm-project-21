@@ -236,6 +236,17 @@ add_entrypoint_object(
     libc.src.stdio.printf_core.vfprintf_internal
 )
 
+add_entrypoint_object(
+  spike_printf
+  SRCS
+    spike_printf.cpp
+  HDRS
+    spike_printf.h
+  DEPENDS
+    libc.src.stdio.printf_core.printf_main
+    libc.src.stdio.printf_core.writer
+)
+
 add_subdirectory(printf_core)
 add_subdirectory(scanf_core)
 

@@ -1,7 +1,8 @@
 {
   "printf": {
     "LIBC_CONF_PRINTF_DISABLE_FLOAT": {
-      "value": true
+      // "value": true
+      "value": false
     },
     "LIBC_CONF_PRINTF_DISABLE_INDEX_MODE": {
       "value": true
