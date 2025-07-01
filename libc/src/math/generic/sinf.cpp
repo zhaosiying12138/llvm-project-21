@@ -30,7 +30,7 @@
 namespace LIBC_NAMESPACE {
 
 LLVM_LIBC_FUNCTION(float, sinf, (float x)) {
-  printf("[ZSY-libc] do sinf()\n");
+  // printf("[ZSY-libc] do sinf()\n");
   using FPBits = typename fputil::FPBits<float>;
   FPBits xbits(x);
 
