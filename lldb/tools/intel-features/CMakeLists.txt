@@ -22,12 +22,12 @@ endif()
 set_source_files_properties(cli-wrapper.cpp PROPERTIES
                             COMPILE_FLAGS ${CLI_WRAPPER_PREPROCESSORS})
 
-add_lldb_library(lldbIntelFeatures SHARED
-  cli-wrapper.cpp
+# add_lldb_library(lldbIntelFeatures SHARED
+#   cli-wrapper.cpp
 
-  LINK_LIBS
-    ${FEATURE_LIBS}
-  )
+#   LINK_LIBS
+#     ${FEATURE_LIBS}
+#   )
 
-install(TARGETS lldbIntelFeatures
-  LIBRARY DESTINATION lib${LLVM_LIBDIR_SUFFIX})
+# install(TARGETS lldbIntelFeatures
+#   LIBRARY DESTINATION lib${LLVM_LIBDIR_SUFFIX})

@@ -2008,7 +2008,8 @@ static Triple withHostArch(Triple T) {
 #endif
 
 std::string sys::getProcessTriple() {
-  std::string TargetTripleString = updateTripleOSVersion(LLVM_HOST_TRIPLE);
+  // std::string TargetTripleString = updateTripleOSVersion(LLVM_HOST_TRIPLE);
+  std::string TargetTripleString = updateTripleOSVersion(LLVM_DEFAULT_TARGET_TRIPLE);
   Triple PT(Triple::normalize(TargetTripleString));
 
 #if __APPLE__
