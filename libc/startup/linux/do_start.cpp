@@ -18,6 +18,9 @@
 #include <sys/mman.h>
 #include <sys/syscall.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 extern "C" int main(int argc, char **argv, char **envp);
 
 extern "C" {
@@ -149,5 +152,13 @@ static ThreadAttributes main_thread_attrib;
 
   exit(retval);
 }
+
+void zsy_libc_finalize() {
+  printf("[ZSY-LLVMLIBC] ZSY fini callback called\n");
+  fflush(stdout);
+}
+
+// 声明段属性
+__attribute__((section(".fini_array"))) typeof(void(*)(void)) __my_fini = zsy_libc_finalize;
 
 } // namespace LIBC_NAMESPACE
