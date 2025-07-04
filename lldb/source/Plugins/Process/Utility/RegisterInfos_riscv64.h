@@ -73,7 +73,7 @@ using namespace riscv_dwarf;
 // The byte offset 0 is a placeholder, which should be corrected at runtime.
 #define DEFINE_VPR_ALT(reg, alt, generic_kind)                                 \
   {                                                                            \
-    #reg, #alt, 16, 0, lldb::eEncodingVector, lldb::eFormatVectorOfUInt8,      \
+    #reg, #alt, 64, (vpr_##reg##_riscv - vpr_first_riscv), lldb::eEncodingVector, lldb::eFormatVectorOfUInt32,      \
     VPR_KIND(vpr_##reg, generic_kind), nullptr, nullptr, nullptr               \
   }
 

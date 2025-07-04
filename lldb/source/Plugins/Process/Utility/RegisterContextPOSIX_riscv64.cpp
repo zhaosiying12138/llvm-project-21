@@ -80,3 +80,8 @@ bool RegisterContextPOSIX_riscv64::IsFPR(unsigned int reg) {
   return m_register_info_up->GetRegisterSetFromRegisterIndex(reg) ==
          RegisterInfoPOSIX_riscv64::FPRegSet;
 }
+
+bool RegisterContextPOSIX_riscv64::IsVPR(unsigned int reg) {
+  return m_register_info_up->GetRegisterSetFromRegisterIndex(reg) ==
+         RegisterInfoPOSIX_riscv64::VPRegSet;
+}

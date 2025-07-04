@@ -23,7 +23,7 @@ public:
   GetRegisterInfoCount(const lldb_private::ArchSpec &target_arch);
 
 public:
-  enum { GPRegSet = 0, FPRegSet };
+  enum { GPRegSet = 0, FPRegSet, VPRegSet };
 
   struct GPR {
     // note: gpr[0] is pc, not x0
@@ -36,8 +36,12 @@ public:
   };
 
   struct VPR {
-    // The size should be VLEN*32 in bits, but we don't have VLEN here.
-    void *vpr;
+    uint64_t vstart;
+    uint64_t vl;
+    uint64_t vtype;
+    uint64_t vcsr;
+    uint64_t vlenb;    /* in bytes, not in bits */
+    uint8_t vreg[32 * 64]; /* 32 vregs，vlen = 512 bit, which means 64 bytes */
   };
 
   RegisterInfoPOSIX_riscv64(const lldb_private::ArchSpec &target_arch,
@@ -46,6 +50,8 @@ public:
   size_t GetGPRSize() const override;
 
   size_t GetFPRSize() const override;
+
+  size_t GetVPRSize() const;
 
   const lldb_private::RegisterInfo *GetRegisterInfo() const override;
 

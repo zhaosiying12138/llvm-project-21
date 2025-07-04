@@ -53,7 +53,8 @@ uint32_t RegisterInfoPOSIX_riscv64::GetRegisterInfoCount(
 enum {
   k_num_gpr_registers = gpr_last_riscv - gpr_first_riscv + 1,
   k_num_fpr_registers = fpr_last_riscv - fpr_first_riscv + 1,
-  k_num_register_sets = 2
+  k_num_vpr_registers = vpr_last_riscv - vpr_first_riscv + 1,
+  k_num_register_sets = 3
 };
 
 // RISC-V64 general purpose registers.
@@ -90,12 +91,29 @@ static_assert(((sizeof g_fpr_regnums_riscv64 /
                1) == k_num_fpr_registers,
               "g_fpr_regnums_riscv64 has wrong number of register infos");
 
+// RISC-V64 floating point registers.
+static const uint32_t g_vpr_regnums_riscv64[] = {
+  vpr_v0_riscv,   vpr_v1_riscv,       vpr_v2_riscv,   vpr_v3_riscv,
+  vpr_v4_riscv,   vpr_v5_riscv,       vpr_v6_riscv,   vpr_v7_riscv,
+  vpr_v8_riscv,   vpr_v9_riscv,      vpr_v10_riscv,  vpr_v11_riscv,
+  vpr_v12_riscv,  vpr_v13_riscv,   vpr_v14_riscv,  vpr_v15_riscv,
+  vpr_v16_riscv,  vpr_v17_riscv,   vpr_v18_riscv,  vpr_v19_riscv,
+  vpr_v20_riscv,  vpr_v21_riscv,   vpr_v22_riscv,  vpr_v23_riscv,
+  vpr_v24_riscv,  vpr_v25_riscv,   vpr_v26_riscv,  vpr_v27_riscv,
+  vpr_v28_riscv,  vpr_v29_riscv,   vpr_v30_riscv,  vpr_v31_riscv,
+  LLDB_INVALID_REGNUM};
+
+  // TODO static_assert(xxx);
+
 // Register sets for RISC-V64.
 static const lldb_private::RegisterSet g_reg_sets_riscv64[k_num_register_sets] =
     {{"General Purpose Registers", "gpr", k_num_gpr_registers,
       g_gpr_regnums_riscv64},
      {"Floating Point Registers", "fpr", k_num_fpr_registers,
-      g_fpr_regnums_riscv64}};
+      g_fpr_regnums_riscv64},
+     {"Vector Registers", "vpr", k_num_vpr_registers,
+      g_vpr_regnums_riscv64}
+    };
 
 RegisterInfoPOSIX_riscv64::RegisterInfoPOSIX_riscv64(
     const lldb_private::ArchSpec &target_arch, lldb_private::Flags flags)
@@ -115,6 +133,10 @@ size_t RegisterInfoPOSIX_riscv64::GetFPRSize() const {
   return sizeof(struct RegisterInfoPOSIX_riscv64::FPR);
 }
 
+size_t RegisterInfoPOSIX_riscv64::GetVPRSize() const {
+  return sizeof(struct RegisterInfoPOSIX_riscv64::VPR);
+}
+
 const lldb_private::RegisterInfo *
 RegisterInfoPOSIX_riscv64::GetRegisterInfo() const {
   return m_register_info_p;
@@ -131,6 +153,8 @@ size_t RegisterInfoPOSIX_riscv64::GetRegisterSetFromRegisterIndex(
     return GPRegSet;
   if (reg_index >= fpr_first_riscv && reg_index <= fpr_last_riscv)
     return FPRegSet;
+  if (reg_index >= vpr_first_riscv && reg_index <= vpr_last_riscv)
+    return VPRegSet;
   return LLDB_INVALID_REGNUM;
 }
 

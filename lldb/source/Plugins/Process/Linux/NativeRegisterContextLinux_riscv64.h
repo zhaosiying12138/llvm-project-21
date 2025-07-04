@@ -59,25 +59,36 @@ protected:
 
   Status WriteFPR() override;
 
+  Status ReadVPR();
+
   void *GetGPRBuffer() override { return &m_gpr; }
 
   void *GetFPRBuffer() override { return &m_fpr; }
+
+  void *GetVPRBuffer() { return &m_vpr; }
 
   size_t GetGPRSize() const override { return GetRegisterInfo().GetGPRSize(); }
 
   size_t GetFPRSize() override { return GetRegisterInfo().GetFPRSize(); }
 
+  size_t GetVPRSize() { return GetRegisterInfo().GetVPRSize(); }
+
 private:
   bool m_gpr_is_valid;
   bool m_fpu_is_valid;
+  bool m_vpr_is_valid;
 
   RegisterInfoPOSIX_riscv64::GPR m_gpr;
 
   RegisterInfoPOSIX_riscv64::FPR m_fpr;
 
+  RegisterInfoPOSIX_riscv64::VPR m_vpr;
+
   bool IsGPR(unsigned reg) const;
 
   bool IsFPR(unsigned reg) const;
+
+  bool IsVPR(unsigned reg) const;
 
   uint32_t CalculateFprOffset(const RegisterInfo *reg_info) const;
 

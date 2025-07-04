@@ -26,6 +26,8 @@
 #include <sys/uio.h>
 // NT_PRSTATUS and NT_FPREGSET definition
 #include <elf.h>
+#include <iostream>
+#include <fstream>
 
 #define REG_CONTEXT_SIZE (GetGPRSize() + GetFPRSize())
 
@@ -62,9 +64,11 @@ NativeRegisterContextLinux_riscv64::NativeRegisterContextLinux_riscv64(
       NativeRegisterContextLinux(native_thread) {
   ::memset(&m_fpr, 0, sizeof(m_fpr));
   ::memset(&m_gpr, 0, sizeof(m_gpr));
+  ::memset(&m_vpr, 0, sizeof(m_vpr));
 
   m_gpr_is_valid = false;
   m_fpu_is_valid = false;
+  m_vpr_is_valid = false;
 }
 
 const RegisterInfoPOSIX_riscv64 &
@@ -93,6 +97,8 @@ Status
 NativeRegisterContextLinux_riscv64::ReadRegister(const RegisterInfo *reg_info,
                                                  RegisterValue &reg_value) {
   Status error;
+
+  std::ofstream log("/home/zhaosiying/test_yushuxin/test.log", std::ios::app);
 
   if (!reg_info) {
     error.SetErrorString("reg_info NULL");
@@ -131,6 +137,18 @@ NativeRegisterContextLinux_riscv64::ReadRegister(const RegisterInfo *reg_info,
     offset = CalculateFprOffset(reg_info);
     assert(offset < GetFPRSize());
     src = (uint8_t *)GetFPRBuffer() + offset;
+  } else if (IsVPR(reg)) {
+    log << "[ZSY-LLDB] Read Vector Register\n";
+    log << "[ZSY-LLDB] name = " << reg_info->name << "\n";
+    log << "[ZSY-LLDB] regNo = " << reg_info->kinds[lldb::eRegisterKindLLDB] << "\n";
+    log << "[ZSY-LLDB] byte_offset = " << reg_info->byte_offset << "\n";
+    error = ReadVPR();
+    if (error.Fail())
+      return error;
+
+    offset = reg_info->byte_offset * 64 + 40;
+    assert(offset < GetVPRSize());
+    src = (uint8_t *)GetVPRBuffer() + offset;
   } else
     return Status("failed - register wasn't recognized to be a GPR or an FPR, "
                   "write strategy unknown");
@@ -264,6 +282,11 @@ bool NativeRegisterContextLinux_riscv64::IsFPR(unsigned reg) const {
          RegisterInfoPOSIX_riscv64::FPRegSet;
 }
 
+bool NativeRegisterContextLinux_riscv64::IsVPR(unsigned reg) const {
+  return GetRegisterInfo().GetRegisterSetFromRegisterIndex(reg) ==
+         RegisterInfoPOSIX_riscv64::VPRegSet;
+}
+
 Status NativeRegisterContextLinux_riscv64::ReadGPR() {
   Status error;
 
@@ -328,9 +351,28 @@ Status NativeRegisterContextLinux_riscv64::WriteFPR() {
   return WriteRegisterSet(&ioVec, GetFPRSize(), NT_FPREGSET);
 }
 
+Status NativeRegisterContextLinux_riscv64::ReadVPR() {
+  Status error;
+
+  if (m_vpr_is_valid)
+    return error;
+
+  struct iovec ioVec;
+  ioVec.iov_base = GetVPRBuffer();
+  ioVec.iov_len = GetVPRSize();
+
+  error = ReadRegisterSet(&ioVec, GetVPRSize(), NT_RISCV_VECTOR);
+
+  if (error.Success())
+    m_vpr_is_valid = true;
+
+  return error;
+}
+
 void NativeRegisterContextLinux_riscv64::InvalidateAllRegisters() {
   m_gpr_is_valid = false;
   m_fpu_is_valid = false;
+  m_vpr_is_valid = false;
 }
 
 uint32_t NativeRegisterContextLinux_riscv64::CalculateFprOffset(
