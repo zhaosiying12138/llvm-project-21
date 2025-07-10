@@ -529,6 +529,10 @@ public:
 
   void SetFlags(const std::string &elf_abi);
 
+  void SetFeaturesStr(const std::string &features_str) { m_features_str = features_str; }
+
+  const std::string &GetFeaturesStr() const { return m_features_str; }
+
 protected:
   void UpdateCore();
 
@@ -539,6 +543,8 @@ protected:
   // Additional arch flags which we cannot get from triple and core For MIPS
   // these are application specific extensions like micromips, mips16 etc.
   uint32_t m_flags = 0;
+
+  std::string m_features_str{};
 
   // Called when m_def or m_entry are changed.  Fills in all remaining members
   // with default values.

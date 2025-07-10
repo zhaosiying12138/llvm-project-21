@@ -45,6 +45,12 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/MipsABIFlags.h"
 
+#include "llvm/Support/RISCVAttributeParser.h"
+#include "llvm/Support/RISCVAttributes.h"
+#include "llvm/Support/RISCVISAInfo.h"
+#include "llvm/TargetParser/SubtargetFeature.h"
+
+
 #define CASE_AND_STREAM(s, def, width)                                         \
   case def:                                                                    \
     s->Printf("%-*s", width, #def);                                            \
@@ -1364,6 +1370,29 @@ void ObjectFileELF::ParseARMAttributes(DataExtractor &data, uint64_t length,
   }
 }
 
+void ObjectFileELF::ParseRISCVAttributes(DataExtractor &data, uint64_t length,
+  ArchSpec &arch_spec) {
+    llvm::RISCVAttributeParser Attributes;
+    llvm::SubtargetFeatures Features;
+
+    if (Attributes.parse(data.GetData(), llvm::endianness::little))
+      return;
+
+    std::optional<llvm::StringRef> Attr = Attributes.getAttributeString(llvm::RISCVAttrs::ARCH);
+    if (!Attr)
+      return;
+
+    auto ParseResult = llvm::RISCVISAInfo::parseNormalizedArchString(*Attr);
+    if (!ParseResult)
+      return;
+
+    auto &ISAInfo = *ParseResult;
+    Features.addFeaturesVector(ISAInfo->toFeatures());
+    arch_spec.SetFeaturesStr(Features.getString());
+    llvm::outs() << "[ZSY-ObjectFileELF] parse riscv attrs = " << Features.getString() << "\n";
+}
+
+
 // GetSectionHeaderInfo
 size_t ObjectFileELF::GetSectionHeaderInfo(SectionHeaderColl &section_headers,
                                            DataExtractor &object_data,
@@ -1562,6 +1591,15 @@ size_t ObjectFileELF::GetSectionHeaderInfo(SectionHeaderColl &section_headers,
           if (sheader.sh_type == SHT_ARM_ATTRIBUTES && section_size != 0 &&
               data.SetData(object_data, sheader.sh_offset, section_size) == section_size)
             ParseARMAttributes(data, section_size, arch_spec);
+        }
+
+        if (arch_spec.GetMachine() == llvm::Triple::riscv32 ||
+            arch_spec.GetMachine() == llvm::Triple::riscv64) {
+          DataExtractor data;
+
+          if (sheader.sh_type == SHT_RISCV_ATTRIBUTES && section_size != 0 &&
+              data.SetData(object_data, sheader.sh_offset, section_size) == section_size)
+            ParseRISCVAttributes(data, section_size, arch_spec);
         }
 
         if (name == g_sect_name_gnu_debuglink) {
