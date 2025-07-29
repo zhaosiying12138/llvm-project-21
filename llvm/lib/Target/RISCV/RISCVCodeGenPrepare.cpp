@@ -190,10 +190,6 @@ bool RISCVCodeGenPrepare::visitFDiv(BinaryOperator &FDiv) {
 
   if (!RsqOp) return false;
 
-  llvm::outs() << "[ZSY-Debug] Before Transform\n";
-  Function *F = FDiv.getParent()->getParent();
-  F->dump();
-
   IRBuilder<> Builder(FDiv.getParent(), std::next(FDiv.getIterator()));
   Builder.setFastMathFlags(FPOp->getFastMathFlags());
   Builder.SetCurrentDebugLocation(FDiv.getDebugLoc());
@@ -202,10 +198,8 @@ bool RISCVCodeGenPrepare::visitFDiv(BinaryOperator &FDiv) {
   Value *Result = Builder.CreateFMul(Num, RsqResult);
   FDiv.replaceAllUsesWith(Result);
   Result->takeName(&FDiv);
-
   RecursivelyDeleteTriviallyDeadInstructions(&FDiv, TLInfo);
-  llvm::outs() << "[ZSY-Debug] After Transform\n";
-  F->dump();
+
   return true;
 }
 
