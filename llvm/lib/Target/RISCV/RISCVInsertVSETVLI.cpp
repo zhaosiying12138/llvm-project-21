@@ -24,6 +24,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "MCTargetDesc/RISCVMCTargetDesc.h"
 #include "RISCV.h"
 #include "RISCVSubtarget.h"
 #include "llvm/ADT/Statistic.h"
@@ -31,6 +32,8 @@
 #include "llvm/CodeGen/LiveIntervals.h"
 #include "llvm/CodeGen/LiveStacks.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
+#include "llvm/CodeGen/MachineInstr.h"
+#include "llvm/TargetParser/RISCVTargetParser.h"
 #include <queue>
 using namespace llvm;
 
@@ -992,6 +995,15 @@ static unsigned computeVLMAX(unsigned VLEN, unsigned SEW,
   return VLEN/SEW;
 }
 
+static bool isYuShuXinInstr(const MachineInstr &MI) {
+  switch (RISCV::getRVVMCOpcode(MI.getOpcode())) {
+  default:
+    return false;
+  case RISCV::VFSIN_V:
+    return true;
+  }
+}
+
 VSETVLIInfo
 RISCVInsertVSETVLI::computeInfoForInstr(const MachineInstr &MI) const {
   VSETVLIInfo InstrInfo;
@@ -1024,6 +1036,9 @@ RISCVInsertVSETVLI::computeInfoForInstr(const MachineInstr &MI) const {
   }
 
   RISCVII::VLMUL VLMul = RISCVII::getLMul(TSFlags);
+  if (isYuShuXinInstr(MI) && isLMUL1OrSmaller(VLMul)) {
+    VLMul = RISCVII::LMUL_1;
+  }
 
   unsigned Log2SEW = MI.getOperand(getSEWOpNum(MI)).getImm();
   // A Log2SEW of 0 is an operation on mask registers only.
@@ -1035,7 +1050,7 @@ RISCVInsertVSETVLI::computeInfoForInstr(const MachineInstr &MI) const {
     if (VLOp.isImm()) {
       int64_t Imm = VLOp.getImm();
       // Conver the VLMax sentintel to X0 register.
-      if (Imm == RISCV::VLMaxSentinel) {
+      if (Imm == RISCV::VLMaxSentinel || isYuShuXinInstr(MI)) {
         // If we know the exact VLEN, see if we can use the constant encoding
         // for the VLMAX instead.  This reduces register pressure slightly.
         const unsigned VLMAX = computeVLMAX(ST->getRealMaxVLen(), SEW, VLMul);
