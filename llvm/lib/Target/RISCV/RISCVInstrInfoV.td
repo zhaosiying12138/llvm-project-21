@@ -1446,6 +1446,9 @@ multiclass VEXP_FV_VS2<string opcodestr, bits<6> funct6, bits<5> vs1> {
 let mayRaiseFPException = true in
 defm VFEXP_V : VEXP_FV_VS2<"yushuxin.vfexp.v", 0b010011, 0b00111>;
 
+let mayRaiseFPException = true in
+defm VFRSQRT_V : VEXP_FV_VS2<"yushuxin.vfrsqrt.v", 0b010011, 0b01111>;
+
 // Vector Floating-Point MIN/MAX Instructions
 let mayRaiseFPException = true in {
 defm VFMIN_V : VMINMAX_FV_V_F<"vfmin", 0b000100>;

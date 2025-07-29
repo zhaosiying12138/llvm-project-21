@@ -454,6 +454,7 @@ defm "" : LMULSEWSchedWritesF<"WriteVFSqrtV">;
 defm "" : LMULSEWSchedWritesF<"WriteVFRecpV">;
 defm "" : LMULSEWSchedWritesF<"WriteVFSinV">;
 defm "" : LMULSEWSchedWritesF<"WriteVFExpV">;
+defm "" : LMULSEWSchedWritesF<"WriteVFRsqrtV">;
 // 13.11. Vector Floating-Point MIN/MAX Instructions
 defm "" : LMULSEWSchedWritesF<"WriteVFMinMaxV">;
 defm "" : LMULSEWSchedWritesF<"WriteVFMinMaxF">;
@@ -683,6 +684,7 @@ defm "" : LMULSEWSchedReadsF<"ReadVFSqrtV">;
 defm "" : LMULSEWSchedReadsF<"ReadVFRecpV">;
 defm "" : LMULSEWSchedReadsF<"ReadVFSinV">;
 defm "" : LMULSEWSchedReadsF<"ReadVFExpV">;
+defm "" : LMULSEWSchedReadsF<"ReadVFRsqrtV">;
 // 13.11. Vector Floating-Point MIN/MAX Instructions
 defm "" : LMULSEWSchedReadsF<"ReadVFMinMaxV">;
 defm "" : LMULSEWSchedReadsF<"ReadVFMinMaxF">;
@@ -928,6 +930,7 @@ defm "" : LMULSEWWriteResF<"WriteVFSqrtV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFRecpV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFSinV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFExpV", []>;
+defm "" : LMULSEWWriteResF<"WriteVFRsqrtV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFMinMaxV", []>;
 defm "" : LMULSEWWriteResF<"WriteVFMinMaxF", []>;
 defm "" : LMULSEWWriteResF<"WriteVFSgnjV", []>;
@@ -1088,6 +1091,7 @@ defm "" : LMULSEWReadAdvanceF<"ReadVFSqrtV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFRecpV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFSinV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFExpV", 0>;
+defm "" : LMULSEWReadAdvanceF<"ReadVFRsqrtV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFMinMaxV", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFMinMaxF", 0>;
 defm "" : LMULSEWReadAdvanceF<"ReadVFSgnjV", 0>;
@@ -1172,6 +1176,8 @@ let Unsupported = true in {
   defm "" : LMULSEWWriteResF<"WriteVFSinV", []>;
   defm "" : LMULSEWReadAdvanceF<"ReadVFSinV", 0>;
   defm "" : LMULSEWWriteResF<"WriteVFExpV", []>;
+  defm "" : LMULSEWWriteResF<"WriteVFRsqrtV", []>;
   defm "" : LMULSEWReadAdvanceF<"ReadVFExpV", 0>;
+  defm "" : LMULSEWReadAdvanceF<"ReadVFRsqrtV", 0>;
 } // Unsupported
 } // UnsupportedSchedYushuxinSinV

@@ -2450,6 +2450,26 @@ foreach vti = AllFloatVectors in {
 }
 
 foreach vti = AllFloatVectors in {
+  defvar BasePreds = GetVTypePredicates<vti>.Predicates;
+
+  let Predicates = !listconcat(BasePreds, [HasNotStdExtZvyushuxin]) in {
+    def : Pat<(riscv_frsqrt_vl (vti.Vector vti.RegClass:$rs2), (vti.Mask V0),
+                              VLOpFrag),
+              (!cast<Instruction>("PseudoVFRSQRT7_V_"# vti.LMul.MX # "_E" # vti.SEW # "_MASK")
+                   (vti.Vector (IMPLICIT_DEF)), vti.RegClass:$rs2,
+                   (vti.Mask V0),
+                   GPR:$vl, vti.Log2SEW, TA_MA)>;
+  }
+
+  let Predicates = !listconcat(BasePreds, [HasStdExtZvyushuxin]) in {
+    def : Pat<(riscv_frsqrt_vl (vti.Vector vti.RegClass:$rs2), (vti.Mask V0),
+                              VLOpFrag),
+              (!cast<Instruction>("PseudoVFRSQRT_V_"# vti.LMul.MX # "_E" # vti.SEW # "_MASK")
+                   (vti.Vector (IMPLICIT_DEF)), vti.RegClass:$rs2,
+                   (vti.Mask V0),
+                   GPR:$vl, vti.Log2SEW, TA_MA)>;
+  }
+
   let Predicates = GetVTypePredicates<vti>.Predicates in {
     // 13.8. Vector Floating-Point Square-Root Instruction
     def : Pat<(any_riscv_fsqrt_vl (vti.Vector vti.RegClass:$rs2), (vti.Mask V0),
@@ -2460,16 +2480,6 @@ foreach vti = AllFloatVectors in {
                    // Value to indicate no rounding mode change in
                    // RISCVInsertReadWriteCSR
                    FRM_DYN,
-                   GPR:$vl, vti.Log2SEW, TA_MA)>;
-
-    def : Pat<(riscv_frsqrt_vl (vti.Vector vti.RegClass:$rs2), (vti.Mask V0),
-                              VLOpFrag),
-              (!cast<Instruction>("PseudoVFRSQRT7_V_"# vti.LMul.MX # "_E" # vti.SEW # "_MASK")
-                   (vti.Vector (IMPLICIT_DEF)), vti.RegClass:$rs2,
-                   (vti.Mask V0),
-                   // Value to indicate no rounding mode change in
-                   // RISCVInsertReadWriteCSR
-                  //  FRM_DYN,
                    GPR:$vl, vti.Log2SEW, TA_MA)>;
 
     // 13.12. Vector Floating-Point Sign-Injection Instructions

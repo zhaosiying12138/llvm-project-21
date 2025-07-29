@@ -884,6 +884,9 @@ def FeatureStdExtZvyushuxin
 def HasStdExtZvyushuxin : Predicate<"Subtarget->hasStdExtZvyushuxin()">,
                         AssemblerPredicate<(all_of FeatureStdExtZvyushuxin),
                             "'Zvyushuxin' (I love you forever~)">;
+def HasNotStdExtZvyushuxin : Predicate<"!Subtarget->hasStdExtZvyushuxin()">,
+                        AssemblerPredicate<(all_of (not FeatureStdExtZvyushuxin)),
+                            "'Zvyushuxin' (I love you forever~)">;
 
 // Vector instruction predicates
 

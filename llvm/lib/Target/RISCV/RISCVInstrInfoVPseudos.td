@@ -2604,6 +2604,23 @@ multiclass VPseudoVFEXP_V {
   }
 }
 
+multiclass VPseudoVFRSQRT_V {
+  foreach m = MxListF in {
+    defvar mx = m.MX;
+    foreach e = SchedSEWSet<mx, isF=1>.val in {
+      let VLMul = m.value in {
+        def "_V_" # mx # "_E" # e
+            : VPseudoUnaryNoMask<m.vrclass, m.vrclass>,
+              SchedUnary<"WriteVFRsqrtV", "ReadVFRsqrtV", mx, e, forcePassthruRead=true>;
+        def "_V_" # mx # "_E" # e # "_MASK"
+            : VPseudoUnaryMask<m.vrclass, m.vrclass>,
+              RISCVMaskedPseudo<MaskIdx = 2>,
+              SchedUnary<"WriteVFRsqrtV", "ReadVFRsqrtV", mx, e, forcePassthruRead=true>;
+      }
+    }
+  }
+}
+
 multiclass PseudoVEXT_VF2 {
   defvar constraints = "@earlyclobber $rd";
   foreach m = MxListVF2 in {
@@ -6498,6 +6515,9 @@ defm PseudoVFSIN : VPseudoVFSIN_V;
 
 let mayRaiseFPException = true in
 defm PseudoVFEXP : VPseudoVFEXP_V;
+
+let mayRaiseFPException = true in
+defm PseudoVFRSQRT : VPseudoVFRSQRT_V;
 
 //===----------------------------------------------------------------------===//
 // 13.10. Vector Floating-Point Reciprocal Estimate Instruction
