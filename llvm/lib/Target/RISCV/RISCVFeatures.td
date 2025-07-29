@@ -878,12 +878,12 @@ def FeatureStdExtZvksg
                      "'Zvksg' (shorthand for 'Zvks' and 'Zvkg')",
                      [FeatureStdExtZvks, FeatureStdExtZvkg]>;
 
-def FeatureStdExtZvyushuxinsin
-    : RISCVExtension<"zvyushuxinsin", 12, 18,
-                     "'Zvyushuxinsin' (I love you forever~)">;
-def HasStdExtZvyushuxinsin : Predicate<"Subtarget->hasStdExtZvyushuxinsin()">,
-                        AssemblerPredicate<(all_of FeatureStdExtZvyushuxinsin),
-                            "'Zvyushuxinsin' (I love you forever~)">;
+def FeatureStdExtZvyushuxin
+    : RISCVExtension<"zvyushuxin", 12, 18,
+                     "'Zvyushuxin' (I love you forever~)">;
+def HasStdExtZvyushuxin : Predicate<"Subtarget->hasStdExtZvyushuxin()">,
+                        AssemblerPredicate<(all_of FeatureStdExtZvyushuxin),
+                            "'Zvyushuxin' (I love you forever~)">;
 
 // Vector instruction predicates
 
