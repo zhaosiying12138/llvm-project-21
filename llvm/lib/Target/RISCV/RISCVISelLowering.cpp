@@ -1447,6 +1447,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
         if (EnableYSXSFUISel) {
           setOperationAction(ISD::FEXP, VT, Custom);
           setOperationAction(ISD::FSIN, VT, Custom);
+          setOperationAction(ISD::FRSQRT, VT, Custom);
         }
       }
 
@@ -6135,6 +6136,7 @@ static unsigned getRISCVVLOp(SDValue Op) {
   OP_CASE(FNEG)
   OP_CASE(FABS)
   OP_CASE(FSQRT)
+  OP_CASE(FRSQRT)
   OP_CASE(SMIN)
   OP_CASE(SMAX)
   OP_CASE(UMIN)
@@ -6243,7 +6245,7 @@ static bool hasPassthruOp(unsigned Opcode) {
          Opcode <= RISCVISD::LAST_RISCV_STRICTFP_OPCODE &&
          "not a RISC-V target specific op");
   static_assert(RISCVISD::LAST_VL_VECTOR_OP - RISCVISD::FIRST_VL_VECTOR_OP ==
-                    130 &&
+                    131 &&
                 RISCVISD::LAST_RISCV_STRICTFP_OPCODE -
                         ISD::FIRST_TARGET_STRICTFP_OPCODE ==
                     21 &&
@@ -6269,7 +6271,7 @@ static bool hasMaskOp(unsigned Opcode) {
          Opcode <= RISCVISD::LAST_RISCV_STRICTFP_OPCODE &&
          "not a RISC-V target specific op");
   static_assert(RISCVISD::LAST_VL_VECTOR_OP - RISCVISD::FIRST_VL_VECTOR_OP ==
-                    130 &&
+                    131 &&
                 RISCVISD::LAST_RISCV_STRICTFP_OPCODE -
                         ISD::FIRST_TARGET_STRICTFP_OPCODE ==
                     21 &&
@@ -6281,7 +6283,7 @@ static bool hasMaskOp(unsigned Opcode) {
   if (Opcode >= RISCVISD::STRICT_FADD_VL &&
       Opcode <= RISCVISD::STRICT_VFROUND_NOEXCEPT_VL)
     return true;
-  if (Opcode == RISCVISD::FEXP_VL || Opcode == RISCVISD::FSIN_VL)
+  if (Opcode == RISCVISD::FEXP_VL || Opcode == RISCVISD::FSIN_VL || RISCVISD::FRSQRT_VL)
     return true;
   return false;
 }
@@ -7276,6 +7278,7 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
   case ISD::SSUBSAT:
   case ISD::FEXP:
   case ISD::FSIN:
+  case ISD::FRSQRT:
     return lowerToScalableOp(Op, DAG);
   case ISD::ABDS:
   case ISD::ABDU: {

@@ -981,6 +981,7 @@ enum NodeType {
   FNEG,
   FABS,
   FSQRT,
+  FRSQRT,
   FCBRT,
   FSIN,
   FCOS,

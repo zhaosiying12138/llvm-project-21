@@ -6862,6 +6862,7 @@ void SelectionDAGBuilder::visitIntrinsicCall(const CallInst &I,
                            getValue(I.getArgOperand(1)), DAG, TLI, Flags));
     return;
   case Intrinsic::sqrt:
+  case Intrinsic::rsqrt:
   case Intrinsic::fabs:
   case Intrinsic::sin:
   case Intrinsic::cos:
@@ -6886,6 +6887,7 @@ void SelectionDAGBuilder::visitIntrinsicCall(const CallInst &I,
     switch (Intrinsic) {
     default: llvm_unreachable("Impossible intrinsic");  // Can't reach here.
     case Intrinsic::sqrt:         Opcode = ISD::FSQRT;         break;
+    case Intrinsic::rsqrt:        Opcode = ISD::FRSQRT;        break;
     case Intrinsic::fabs:         Opcode = ISD::FABS;          break;
     case Intrinsic::sin:          Opcode = ISD::FSIN;          break;
     case Intrinsic::cos:          Opcode = ISD::FCOS;          break;

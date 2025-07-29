@@ -17,14 +17,17 @@
 #include "RISCVTargetMachine.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
 #include "llvm/IR/Dominators.h"
+#include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InstVisitor.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
+#include "llvm/Transforms/Utils/Local.h"
 
 using namespace llvm;
 
@@ -38,6 +41,7 @@ class RISCVCodeGenPrepare : public FunctionPass,
   const DataLayout *DL;
   const DominatorTree *DT;
   const RISCVSubtarget *ST;
+  const TargetLibraryInfo *TLInfo;
 
 public:
   static char ID;
@@ -52,10 +56,12 @@ public:
     AU.setPreservesCFG();
     AU.addRequired<DominatorTreeWrapperPass>();
     AU.addRequired<TargetPassConfig>();
+    AU.addRequired<TargetLibraryInfoWrapperPass>();
   }
 
   bool visitInstruction(Instruction &I) { return false; }
   bool visitAnd(BinaryOperator &BO);
+  bool visitFDiv(BinaryOperator &BO);
   bool visitIntrinsicInst(IntrinsicInst &I);
   bool expandVPStrideLoad(IntrinsicInst &I);
 };
@@ -164,6 +170,45 @@ bool RISCVCodeGenPrepare::visitIntrinsicInst(IntrinsicInst &I) {
   return true;
 }
 
+bool RISCVCodeGenPrepare::visitFDiv(BinaryOperator &FDiv) {
+  Type *FDivTy = FDiv.getType();
+  if (!dyn_cast<FixedVectorType>(FDivTy) ||
+        !(FDivTy->getScalarType()->isFloatTy() || FDivTy->getScalarType()->isHalfTy()))
+    return false;
+
+  const FPMathOperator *FPOp = cast<const FPMathOperator>(&FDiv);
+  Value *Num = FDiv.getOperand(0);
+  Value *Den = FDiv.getOperand(1);
+  Value *RsqOp = nullptr;
+
+  auto *DenII = dyn_cast<IntrinsicInst>(Den);
+  if (DenII && DenII->getIntrinsicID() == Intrinsic::sqrt &&
+      DenII->hasOneUse()) {
+    const auto *SqrtOp = cast<FPMathOperator>(DenII);
+    RsqOp = SqrtOp->getOperand(0);
+  }
+
+  if (!RsqOp) return false;
+
+  llvm::outs() << "[ZSY-Debug] Before Transform\n";
+  Function *F = FDiv.getParent()->getParent();
+  F->dump();
+
+  IRBuilder<> Builder(FDiv.getParent(), std::next(FDiv.getIterator()));
+  Builder.setFastMathFlags(FPOp->getFastMathFlags());
+  Builder.SetCurrentDebugLocation(FDiv.getDebugLoc());
+
+  Value *RsqResult = Builder.CreateUnaryIntrinsic(Intrinsic::rsqrt, RsqOp);
+  Value *Result = Builder.CreateFMul(Num, RsqResult);
+  FDiv.replaceAllUsesWith(Result);
+  Result->takeName(&FDiv);
+
+  RecursivelyDeleteTriviallyDeadInstructions(&FDiv, TLInfo);
+  llvm::outs() << "[ZSY-Debug] After Transform\n";
+  F->dump();
+  return true;
+}
+
 // Always expand zero strided loads so we match more .vx splat patterns, even if
 // we have +optimized-zero-stride-loads. RISCVDAGToDAGISel::Select will convert
 // it back to a strided load if it's optimized.
@@ -206,6 +251,7 @@ bool RISCVCodeGenPrepare::runOnFunction(Function &F) {
 
   DL = &F.getDataLayout();
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
+  TLInfo = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F);
 
   bool MadeChange = false;
   for (auto &BB : F)
@@ -217,6 +263,7 @@ bool RISCVCodeGenPrepare::runOnFunction(Function &F) {
 
 INITIALIZE_PASS_BEGIN(RISCVCodeGenPrepare, DEBUG_TYPE, PASS_NAME, false, false)
 INITIALIZE_PASS_DEPENDENCY(TargetPassConfig)
+INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
 INITIALIZE_PASS_END(RISCVCodeGenPrepare, DEBUG_TYPE, PASS_NAME, false, false)
 
 char RISCVCodeGenPrepare::ID = 0;

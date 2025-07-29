@@ -303,6 +303,7 @@ enum NodeType : unsigned {
   FNEG_VL,
   FABS_VL,
   FSQRT_VL,
+  FRSQRT_VL,
   FCLASS_VL,
   FCOPYSIGN_VL, // Has a passthru operand
   VFCVT_RTZ_X_F_VL,

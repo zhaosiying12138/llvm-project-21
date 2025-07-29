@@ -139,6 +139,7 @@ def riscv_fdiv_vl  : SDNode<"RISCVISD::FDIV_VL",  SDT_RISCVFPBinOp_VL>;
 def riscv_fneg_vl  : SDNode<"RISCVISD::FNEG_VL",  SDT_RISCVFPUnOp_VL>;
 def riscv_fabs_vl  : SDNode<"RISCVISD::FABS_VL",  SDT_RISCVFPUnOp_VL>;
 def riscv_fsqrt_vl : SDNode<"RISCVISD::FSQRT_VL", SDT_RISCVFPUnOp_VL>;
+def riscv_frsqrt_vl : SDNode<"RISCVISD::FRSQRT_VL", SDT_RISCVFPUnOp_VL>;
 def riscv_fcopysign_vl : SDNode<"RISCVISD::FCOPYSIGN_VL", SDT_RISCVCopySign_VL>;
 def riscv_vfmin_vl   : SDNode<"RISCVISD::VFMIN_VL",  SDT_RISCVFPBinOp_VL, [SDNPCommutative]>;
 def riscv_vfmax_vl   : SDNode<"RISCVISD::VFMAX_VL",  SDT_RISCVFPBinOp_VL, [SDNPCommutative]>;
@@ -2459,6 +2460,16 @@ foreach vti = AllFloatVectors in {
                    // Value to indicate no rounding mode change in
                    // RISCVInsertReadWriteCSR
                    FRM_DYN,
+                   GPR:$vl, vti.Log2SEW, TA_MA)>;
+
+    def : Pat<(riscv_frsqrt_vl (vti.Vector vti.RegClass:$rs2), (vti.Mask V0),
+                              VLOpFrag),
+              (!cast<Instruction>("PseudoVFRSQRT7_V_"# vti.LMul.MX # "_E" # vti.SEW # "_MASK")
+                   (vti.Vector (IMPLICIT_DEF)), vti.RegClass:$rs2,
+                   (vti.Mask V0),
+                   // Value to indicate no rounding mode change in
+                   // RISCVInsertReadWriteCSR
+                  //  FRM_DYN,
                    GPR:$vl, vti.Log2SEW, TA_MA)>;
 
     // 13.12. Vector Floating-Point Sign-Injection Instructions
